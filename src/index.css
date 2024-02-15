@@ -1,4 +1,4 @@
-:root {
+/* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,7 +11,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
+} */
 
 a {
   font-weight: 500;
@@ -71,4 +71,26 @@ button:focus-visible {
 html {
   padding: 0 !important;
   margin: 0 !important;
+  background-color: #f9f9f9;
+}
+
+
+#navbar {
+  /* padding: 1rem; */
+  /* position: absolute; */
+  z-index: 1;
+  /* width: 30vw; */
+  max-width: 220px;
+  background-color: gray;
+  min-height: 100vh;
+}
+
+#navbar .nav-btn {
+  color: white;
+  font-size: large;
+  text-decoration: none;
+}
+
+#navbar .nav-div:hover {
+  background-color: #888;
 }

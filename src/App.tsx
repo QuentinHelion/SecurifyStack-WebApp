@@ -1,20 +1,17 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
-import Navbar from './components/navbar.jsx';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
-//import "~bootstrap/scss/bootstrap"
-// Import our custom CSS
-// Import all of Bootstrap's JS
-// import * as bootstrap from 'bootstrap'
+import Checklist from './pages/Checklist';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <div>
-      <Navbar />
-    </div>
+    <Routes>
+      <Route path="/" element={<Checklist />} />
+      <Route path="/checklist" element={<Checklist />} />
+  </Routes>
   )
 }
 
