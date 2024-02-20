@@ -1,17 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
+import App from './App'
 import './index.css'
-import Navbar from './components/navbar.jsx';
+import Navbar from './components/navbar.tsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-import {BrowserRouter} from 'react-router-dom';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Navbar />
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+      <div className="d-flex no-wrap">
+          <Navbar />
+          <App />
+      </div>
   </React.StrictMode>,
 )

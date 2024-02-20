@@ -1,18 +1,20 @@
-import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 
-import Checklist from './pages/Checklist';
+import Checklist from './pages/Checklist.tsx';
+import Main from "./pages/Main.tsx";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <Routes>
-      <Route path="/" element={<Checklist />} />
-      <Route path="/checklist" element={<Checklist />} />
-  </Routes>
-  )
+      <div className="p-5">
+        <Router>
+            <Routes>
+              <Route path="/" element={<Main />} />
+              <Route path="/checklist" element={<Checklist />} />
+            </Routes>
+        </Router>
+      </div>
+  );
 }
 
-export default App
+export default App;
