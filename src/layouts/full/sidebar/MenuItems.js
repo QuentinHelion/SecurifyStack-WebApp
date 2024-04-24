@@ -1,5 +1,5 @@
 import {
-  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus
+  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus, IconChecks
 } from '@tabler/icons';
 
 import { uniqueId } from 'lodash';
@@ -13,7 +13,7 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: 'Checklist',
-    icon: IconLayoutDashboard,
+    icon: IconChecks,
     href: '/checklist',
   },
   {

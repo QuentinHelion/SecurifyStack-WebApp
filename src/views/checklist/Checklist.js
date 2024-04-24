@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Grid, CardContent } from '@mui/material';
+import BlankCard from 'src/components/shared/BlankCard';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
@@ -15,6 +17,7 @@ const TaskList = () => {
         const updatedTasks = [...tasks];
         updatedTasks[index].state = !updatedTasks[index].state;
         setTasks(updatedTasks);
+        saveTasksToJson();
     };
 
     const saveTasksToJson = async () => {
@@ -39,7 +42,8 @@ const TaskList = () => {
     };
 
     return (
-        <div>
+        <>
+        {/* <div>
             <h1>Task List</h1>
             <ul>
                 {tasks.map((task, index) => (
@@ -55,7 +59,29 @@ const TaskList = () => {
                 ))}
             </ul>
             <button onClick={saveTasksToJson}>Save</button>
-        </div>
+        </div> */}
+        <Grid container spacing={3}>
+            <Grid item sm={12}>
+                <Grid container spacing={3}>
+                    {tasks.map((task, index) => (
+                        <Grid item sm={12}>
+                            <BlankCard>
+                                <CardContent>
+                                    <input
+                                        type="checkbox"
+                                        checked={task.state}
+                                        onChange={() => handleToggleState(index)}
+                                    />
+                                    <span>{task.title}</span>
+                                    <p>{task.description}</p>
+                                </CardContent>
+                            </BlankCard>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Grid>
+        </Grid>
+        </>
     );
 };
 
