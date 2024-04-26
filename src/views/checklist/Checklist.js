@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, CardContent } from '@mui/material';
 import BlankCard from 'src/components/shared/BlankCard';
+// import { Container, Row, Col } from 'react-bootstrap';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
@@ -42,24 +46,6 @@ const TaskList = () => {
     };
 
     return (
-        <>
-        {/* <div>
-            <h1>Task List</h1>
-            <ul>
-                {tasks.map((task, index) => (
-                    <li key={index}>
-                        <input
-                            type="checkbox"
-                            checked={task.state}
-                            onChange={() => handleToggleState(index)}
-                        />
-                        <span>{task.title}</span>
-                        <p>{task.description}</p>
-                    </li>
-                ))}
-            </ul>
-            <button onClick={saveTasksToJson}>Save</button>
-        </div> */}
         <Grid container spacing={3}>
             <Grid item sm={12}>
                 <Grid container spacing={3}>
@@ -67,13 +53,22 @@ const TaskList = () => {
                         <Grid item sm={12}>
                             <BlankCard>
                                 <CardContent>
-                                    <input
-                                        type="checkbox"
-                                        checked={task.state}
-                                        onChange={() => handleToggleState(index)}
-                                    />
-                                    <span>{task.title}</span>
-                                    <p>{task.description}</p>
+                                    <Container>
+                                        <Row className='p-2'>
+                                            <Col xs={1} md={1} lg={1} className='d-flex justify-content-center align-items-center w-25'>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={task.state}
+                                                    className="big-checkbox"
+                                                    onChange={() => handleToggleState(index)}
+                                                />
+                                            </Col>
+                                            <Col xs={11} md={11} lg={11} className='w-75 d-flex flex-wrap align-items-center'>
+                                                <h3 className='w-100 mb-2'>{task.name}</h3>
+                                                <p>{task.description}</p>
+                                            </Col>
+                                        </Row>
+                                    </Container>
                                 </CardContent>
                             </BlankCard>
                         </Grid>
@@ -81,7 +76,6 @@ const TaskList = () => {
                 </Grid>
             </Grid>
         </Grid>
-        </>
     );
 };
 

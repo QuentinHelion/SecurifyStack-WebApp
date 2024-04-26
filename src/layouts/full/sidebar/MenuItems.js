@@ -9,18 +9,17 @@ const Menuitems = [
     navlabel: true,
     subheader: 'Home',
   },
-
-  {
-    id: uniqueId(),
-    title: 'Checklist',
-    icon: IconChecks,
-    href: '/checklist',
-  },
   {
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconLayoutDashboard,
     href: '/dashboard',
+  },
+  {
+    id: uniqueId(),
+    title: 'Checklist',
+    icon: IconChecks,
+    href: '/checklist',
   },
   {
     navlabel: true,
