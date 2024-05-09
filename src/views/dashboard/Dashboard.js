@@ -1,64 +1,29 @@
-import Chart from 'chart.js/auto';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
+import axios from 'axios';
+import Chart from 'chart.js/auto';
 
 const Dashboard = () => {
-    // Simulated performance data for testing
-    const performanceData = [
-        {
-            "cpu": 0.0231049143211886,
-            "iowait": 0.000553445899708048,
-            "loadavg": 0.34767240410053,
-            "maxcpu": 12,
-            "memtotal": 67177291776,
-            "memused": 18985763258.1554,
-            "netin": 8897.49999851192,
-            "netout": 32827.8025309184,
-            "roottotal": 100861726720,
-            "rootused": 35539958803.2489,
-            "swaptotal": 8589930496,
-            "swapused": 2883584,
-            "time": 1704931200
-        },
-        {
-            "cpu": 0.0164265326178475,
-            "iowait": 0.000540410466280299,
-            "loadavg": 0.26977900132275,
-            "maxcpu": 12,
-            "memtotal": 67177291776,
-            "memused": 19078659889.5746,
-            "netin": 17497.0959718915,
-            "netout": 537.475782407408,
-            "roottotal": 100861726720,
-            "rootused": 35545227245.1235,
-            "swaptotal": 8589930496,
-            "swapused": 2883584,
-            "time": 1705536000
-        },
-        {
-            "cpu": 0.0129761509396944,
-            "iowait": 0.000533519834658491,
-            "loadavg": 0.231503918650794,
-            "maxcpu": 12,
-            "memtotal": 67177291776,
-            "memused": 15295937880.0897,
-            "netin": 10322.25453125,
-            "netout": 659.815556878313,
-            "roottotal": 100861726720,
-            "rootused": 35547110525.1622,
-            "swaptotal": 8589930496,
-            "swapused": 2883584,
-            "time": 1706140800
-        }
-    ];
-
+    const [performanceData, setPerformanceData] = useState([]);
     const [selectedResource, setSelectedResource] = useState('cpu');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/stats/proxmox');
+                setPerformanceData(response.data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleResourceChange = (event) => {
         setSelectedResource(event.target.value);
     };
 
-    // Prepare data for the chart based on selected resource
     const chartData = {
         labels: performanceData.map(data => new Date(data.time * 1000).toLocaleString()),
         datasets: [
@@ -102,7 +67,7 @@ const Dashboard = () => {
                 <Line data={chartData}/>
             </div>
         </div>
-    );
+);
 };
 
 export default Dashboard;
