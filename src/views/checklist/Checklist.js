@@ -11,7 +11,7 @@ const TaskList = () => {
 
     useEffect(() => {
         // Fetch the JSON data
-        fetch('http://localhost:5000/checklist/get') // Assuming checklist.json is in the public directory
+        fetch('http://192.168.1.26:5000/checklist/get') // Assuming checklist.json is in the public directory
             .then(response => response.json())
             .then(data => setTasks(data))
             .catch(error => console.error('Error fetching data:', error));
