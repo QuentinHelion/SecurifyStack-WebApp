@@ -2,7 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import {
+    Chart,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    TimeScale,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
 
+// Register the required components
+Chart.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    TimeScale,
+    Title,
+    Tooltip,
+    Legend
+);
 const Dashboard = () => {
     const [performanceData, setPerformanceData] = useState([]);
     const [selectedResource, setSelectedResource] = useState('cpu');
