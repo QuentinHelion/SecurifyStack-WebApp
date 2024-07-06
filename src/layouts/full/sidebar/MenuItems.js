@@ -1,5 +1,6 @@
 import {
-  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus, IconChecks
+  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus, IconChecks,
+  IconSettingsAutomation
 } from '@tabler/icons';
 
 import { uniqueId } from 'lodash';
@@ -20,6 +21,12 @@ const Menuitems = [
     title: 'Checklist',
     icon: IconChecks,
     href: '/checklist',
+  },
+  {
+    id: uniqueId(),
+    title: 'Deploy VMs',
+    icon: IconSettingsAutomation,
+    href: '/form',
   },
   {
     navlabel: true,
