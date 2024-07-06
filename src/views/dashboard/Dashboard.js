@@ -10,7 +10,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://192.168.1.26:5000/stats/proxmox');
+                const response = await axios.get('http://10.0.10.3:5000/stats/proxmox?token=WzExDHmnGpjJSKbT');
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -64,10 +64,10 @@ const Dashboard = () => {
                 </select>
             </div>
             <div className="performance-chart">
-                <Line data={chartData}/>
+                <Line data={chartData} />
             </div>
         </div>
-);
+    );
 };
 
 export default Dashboard;
