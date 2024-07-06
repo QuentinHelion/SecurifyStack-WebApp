@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
-import Chart from 'chart.js/auto';
+import Cookies from 'js-cookie';
 
 const Dashboard = () => {
     const [performanceData, setPerformanceData] = useState([]);
@@ -10,7 +10,10 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/stats/proxmox');
+                const params = {
+                    token: Cookies.get('token')
+                }
+                const response = await axios.get('http://localhost:5000/stats/proxmox', {params});
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
