@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, ButtonGroup, Stack } from '@mui/material';
+import { Box, ButtonGroup, Button } from '@mui/material';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
 import Form from './Form';
-import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
 
 const initialFormState = {
     target_node: '',
@@ -30,6 +30,7 @@ const initialFormState = {
 const DeployPage = () => {
     const [formData, setFormData] = useState(initialFormState);
     const [currentForm, setCurrentForm] = useState('Deploy-1');
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -55,25 +56,32 @@ const DeployPage = () => {
     };
 
     const renderFormFields = () => {
+        let fields = [];
+
         switch (currentForm) {
             case 'Deploy-1':
-                return [
+                fields = [
                     { label: 'Template', name: 'clone', type: 'text', required: true },
                     { label: 'VM Name', name: 'vm_name', type: 'text', required: true },
                     { label: 'VM ID', name: 'vm_id', type: 'number', required: true },
-                    { label: 'Cores', name: 'cores', type: 'number' },
-                    { label: 'Sockets', name: 'sockets', type: 'number' },
-                    { label: 'Memory', name: 'memory', type: 'number' },
                     { label: 'IP Address', name: 'ip', type: 'text', required: true },
                     { label: 'Gateway', name: 'gw', type: 'text', required: true },
-                    { label: 'Disk Size', name: 'disk_size', type: 'text' },
-                    { label: 'Network Model', name: 'network_model', type: 'text' },
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true },
-                    { label: 'DNS', name: 'nameserver', type: 'text' }
+                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
                 ];
+                if (showAdvanced) {
+                    fields = fields.concat([
+                        { label: 'Cores', name: 'cores', type: 'number' },
+                        { label: 'Sockets', name: 'sockets', type: 'number' },
+                        { label: 'Memory', name: 'memory', type: 'number' },
+                        { label: 'Disk Size', name: 'disk_size', type: 'text' },
+                        { label: 'Network Model', name: 'network_model', type: 'text' },
+                        { label: 'DNS', name: 'nameserver', type: 'text' }
+                    ]);
+                }
+                break;
             case 'Deploy-any-count':
-                return [
+                fields = [
                     { label: 'Base Name', name: 'base_name', type: 'text', required: true },
                     { label: 'Count', name: 'count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
@@ -82,8 +90,9 @@ const DeployPage = () => {
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
                 ];
+                break;
             case 'Deploy-any-names':
-                return [
+                fields = [
                     { label: 'Hostnames (comma-separated)', name: 'hostnames', type: 'text', required: true },
                     { label: 'Count', name: 'count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
@@ -92,9 +101,12 @@ const DeployPage = () => {
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
                 ];
+                break;
             default:
-                return [];
+                break;
         }
+
+        return fields;
     };
 
     return (
@@ -117,6 +129,17 @@ const DeployPage = () => {
                     handleChange={handleChange}
                     handleSubmit={handleSubmit}
                 />
+                {currentForm === 'Deploy-1' && (
+                    <Box mt={2}>
+                        <Button
+                            variant="outlined"
+                            startIcon={showAdvanced ? <ExpandLess /> : <ExpandMore />}
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                        >
+                            Advanced Settings
+                        </Button>
+                    </Box>
+                )}
             </Box>
         </Box>
     );
