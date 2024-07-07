@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate  } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -28,7 +29,7 @@ Chart.register(
 const Dashboard = () => {
     const [performanceData, setPerformanceData] = useState([]);
     const [selectedResource, setSelectedResource] = useState('cpu');
-
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -39,6 +40,10 @@ const Dashboard = () => {
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                if(error.response.status === 401) {
+                    Cookies.remove('token');
+                    navigate('/auth/login')
+                }
             }
         };
 
