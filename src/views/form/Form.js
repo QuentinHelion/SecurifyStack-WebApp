@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, Stack } from '@mui/material';
+import { Box, Typography, Button, Stack, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
 
 const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
@@ -17,16 +17,35 @@ const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
                         >
                             {field.label}
                         </Typography>
-                        <CustomTextField
-                            id={field.name}
-                            name={field.name}
-                            type={field.type || 'text'}
-                            variant="outlined"
-                            fullWidth
-                            value={formData[field.name]}
-                            onChange={handleChange}
-                            required={field.required}
-                        />
+                        {field.type === 'select' ? (
+                            <FormControl fullWidth>
+                                <Select
+                                    id={field.name}
+                                    name={field.name}
+                                    value={formData[field.name]}
+                                    onChange={handleChange}
+                                    required={field.required}
+                                    variant="outlined"
+                                >
+                                    {field.options.map((option) => (
+                                        <MenuItem key={option} value={option}>
+                                            {option}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        ) : (
+                            <CustomTextField
+                                id={field.name}
+                                name={field.name}
+                                type={field.type || 'text'}
+                                variant="outlined"
+                                fullWidth
+                                value={formData[field.name]}
+                                onChange={handleChange}
+                                required={field.required}
+                            />
+                        )}
                     </Box>
                 ))}
                 <Button type="submit" variant="contained">Submit</Button>
