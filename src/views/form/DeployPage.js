@@ -24,7 +24,8 @@ const initialFormState = {
     count: '',
     start_vmid: '',
     start_ip: '',
-    hostnames: ''
+    hostnames: '',
+    network_config_type: 'dhcp'  // Added network_config_type with default value 'dhcp'
 };
 
 const DeployPage = () => {
@@ -48,7 +49,7 @@ const DeployPage = () => {
         console.log('Form Data as JSON:', dataToSend);
 
         try {
-            const response = await axios.post('http://10.0.10.3:5000/run-terraform?token=qvxOU3mmMCwC7z5j', dataToSend);
+            const response = await axios.post('http://10.0.10.3:5000/run-terraform?token=SUMvglG4dv1J2s1m', dataToSend);
             console.log('Server response:', response.data);
         } catch (error) {
             console.error('Error sending data to the server:', error);
@@ -64,11 +65,21 @@ const DeployPage = () => {
                     { label: 'Template', name: 'clone', type: 'text', required: true },
                     { label: 'VM Name', name: 'vm_name', type: 'text', required: true },
                     { label: 'VM ID', name: 'vm_id', type: 'number', required: true },
-                    { label: 'IP Address', name: 'ip', type: 'text', required: true },
-                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
+                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
+                ];
+
+                if (formData.network_config_type === 'static') {
+                    fields = fields.concat([
+                        { label: 'IP Address', name: 'ip', type: 'text', required: true },
+                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
+                    ]);
+                }
+
+                fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
-                ];
+                ]);
+
                 if (showAdvanced) {
                     fields = fields.concat([
                         { label: 'Cores', name: 'cores', type: 'number' },
@@ -85,22 +96,40 @@ const DeployPage = () => {
                     { label: 'Base Name', name: 'base_name', type: 'text', required: true },
                     { label: 'Count', name: 'count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Start IP', name: 'start_ip', type: 'number', required: true },
-                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
+                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
+                ];
+
+                if (formData.network_config_type === 'static') {
+                    fields = fields.concat([
+                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
+                    ]);
+                }
+
+                fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
-                ];
+                ]);
                 break;
             case 'Deploy-any-names':
                 fields = [
                     { label: 'Hostnames (comma-separated)', name: 'hostnames', type: 'text', required: true },
                     { label: 'Count', name: 'count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Start IP', name: 'start_ip', type: 'number', required: true },
-                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
+                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
+                ];
+
+                if (formData.network_config_type === 'static') {
+                    fields = fields.concat([
+                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
+                    ]);
+                }
+
+                fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'text', required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
-                ];
+                ]);
                 break;
             default:
                 break;
