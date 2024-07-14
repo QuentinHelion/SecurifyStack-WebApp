@@ -1,7 +1,6 @@
 import React, { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
-import { element } from 'prop-types';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -14,7 +13,6 @@ const Icons = Loadable(lazy(() => import('../views/icons/Icons')))
 const TypographyPage = Loadable(lazy(() => import('../views/utilities/TypographyPage')))
 const Shadow = Loadable(lazy(() => import('../views/utilities/Shadow')))
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
-const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
 const DeployPage = Loadable(lazy(() => import('../views/form/DeployPage')));
@@ -40,7 +38,6 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: '404', element: <Error /> },
-      { path: '/auth/register', element: <Register /> },
       { path: '/auth/login', element: <Login /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
