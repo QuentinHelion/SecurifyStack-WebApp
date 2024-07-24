@@ -36,7 +36,7 @@ const Dashboard = () => {
                 const params = {
                     token: Cookies.get('token')
                 }
-                const response = await axios.get('http://localhost:5000/stats/proxmox', {params});
+                const response = await axios.get('http://10.0.10.3:5000/stats/proxmox', {params});
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);

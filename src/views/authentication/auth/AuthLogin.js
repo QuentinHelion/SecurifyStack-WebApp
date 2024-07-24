@@ -25,7 +25,7 @@ const AuthLogin = ({ title }) => {
                 dc: 'securify-stack',
                 password: document.getElementById("password").value,
             }
-            const response = await axios.get('http://localhost:5000/login', {params});
+            const response = await axios.get('http://10.0.10.3:5000/login', {params});
             Cookies.set('token', response.data.message, { expires: 7 }); // Expires in 7 days
 
             navigate('/');
