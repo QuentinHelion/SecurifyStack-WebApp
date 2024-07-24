@@ -45,6 +45,14 @@ const initialDeployAnyNamesState = {
 };
 const token = Cookies.get('token');
 
+// Mapping of network tag names to VLAN IDs
+const networkTagMapping = {
+    'CORE': 10,
+    'MONITORING': 20,
+    'USERS': 40,
+    'EXTERNAL': 80
+};
+
 const DeployPage = () => {
     const [deploy1Data, setDeploy1Data] = useState(initialDeploy1State);
     const [deployAnyCountData, setDeployAnyCountData] = useState(initialDeployAnyCountState);
@@ -78,21 +86,21 @@ const DeployPage = () => {
             case 'Deploy-1':
                 setDeploy1Data({
                     ...deploy1Data,
-                    [name]: name === 'vm_id' || name === 'cores' || name === 'sockets' || name === 'memory' || name === 'network_tag'
+                    [name]: name === 'vm_id' || name === 'cores' || name === 'sockets' || name === 'memory'
                         ? Number(value) : value
                 });
                 break;
             case 'Deploy-any-count':
                 setDeployAnyCountData({
                     ...deployAnyCountData,
-                    [name]: name === 'vm_count' || name === 'start_vmid' || name === 'network_tag'
+                    [name]: name === 'vm_count' || name === 'start_vmid'
                         ? Number(value) : value
                 });
                 break;
             case 'Deploy-any-names':
                 setDeployAnyNamesData({
                     ...deployAnyNamesData,
-                    [name]: name === 'start_vmid' || name === 'network_tag'
+                    [name]: name === 'start_vmid'
                         ? Number(value) : name === 'hostnames'
                             ? value.split(',').map(h => h.trim()) : value
                 });
@@ -108,13 +116,25 @@ const DeployPage = () => {
         let dataToSend;
         switch (currentForm) {
             case 'Deploy-1':
-                dataToSend = { ...deploy1Data, case: currentForm };
+                dataToSend = {
+                    ...deploy1Data,
+                    network_tag: networkTagMapping[deploy1Data.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             case 'Deploy-any-count':
-                dataToSend = { ...deployAnyCountData, case: currentForm };
+                dataToSend = {
+                    ...deployAnyCountData,
+                    network_tag: networkTagMapping[deployAnyCountData.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             case 'Deploy-any-names':
-                dataToSend = { ...deployAnyNamesData, case: currentForm };
+                dataToSend = {
+                    ...deployAnyNamesData,
+                    network_tag: networkTagMapping[deployAnyNamesData.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             default:
                 break;
@@ -151,7 +171,7 @@ const DeployPage = () => {
 
                 fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ]);
 
                 if (showAdvanced) {
@@ -174,7 +194,7 @@ const DeployPage = () => {
                     { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
                     { label: 'Gateway', name: 'gw', type: 'text', required: true },
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ];
 
                 if (showAdvanced) {
@@ -196,7 +216,7 @@ const DeployPage = () => {
                     { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
                     { label: 'Gateway', name: 'gw', type: 'text', required: true },
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ];
 
                 if (showAdvanced) {
