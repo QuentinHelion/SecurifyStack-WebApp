@@ -171,20 +171,11 @@ const DeployPage = () => {
                     { label: 'Base Name', name: 'base_name', type: 'text', required: true },
                     { label: 'Count', name: 'vm_count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
-                ];
-
-                if (deployAnyCountData.network_config_type === 'static') {
-                    fields = fields.concat([
-                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
-                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
-                    ]);
-                }
-
-                fields = fields.concat([
+                    { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
-                ]);
+                ];
 
                 if (showAdvanced) {
                     fields = fields.concat([
@@ -202,20 +193,11 @@ const DeployPage = () => {
                     { label: 'Template', name: 'clone', type: 'select', options: templates, required: true },
                     { label: 'Hostnames (comma-separated)', name: 'hostnames', type: 'text', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
-                ];
-
-                if (deployAnyNamesData.network_config_type === 'static') {
-                    fields = fields.concat([
-                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
-                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
-                    ]);
-                }
-
-                fields = fields.concat([
+                    { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
-                ]);
+                ];
 
                 if (showAdvanced) {
                     fields = fields.concat([
