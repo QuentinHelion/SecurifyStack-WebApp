@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, Stack, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Box, Typography, Button, Stack, MenuItem, Select, FormControl } from '@mui/material';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
 
 const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
