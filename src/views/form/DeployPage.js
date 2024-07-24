@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSnackbar } from 'notistack';
 import { Box, ButtonGroup, Button, CircularProgress } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
@@ -45,7 +46,6 @@ const initialDeployAnyNamesState = {
 };
 const token = Cookies.get('token');
 
-// Mapping of network tag names to VLAN IDs
 const networkTagMapping = {
     'CORE': 10,
     'MONITORING': 20,
@@ -62,6 +62,7 @@ const DeployPage = () => {
     const [loading, setLoading] = useState(true);
     const [bridges, setBridges] = useState([]);
     const [templates, setTemplates] = useState([]);
+    const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -145,8 +146,10 @@ const DeployPage = () => {
         try {
             const response = await axios.post(`http://10.0.10.3:5000/run-terraform?token=${token}`, dataToSend);
             console.log('Server response:', response.data);
+            enqueueSnackbar('VM creation successful!', { variant: 'success', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
             console.error('Error sending data to the server:', error);
+            enqueueSnackbar('Operation failed. Please try again.', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         }
     };
 
@@ -271,6 +274,7 @@ const DeployPage = () => {
                     </Button>
                 </Box>
             </Box>
+
         </Box>
     );
 };

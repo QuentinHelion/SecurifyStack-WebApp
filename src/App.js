@@ -1,6 +1,7 @@
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { useRoutes } from 'react-router-dom';
 import Router from './routes/Router';
+import { SnackbarProvider } from 'notistack';
 
 import { baselightTheme } from "./theme/DefaultColors";
 
@@ -11,7 +12,9 @@ function App() {
     <ThemeProvider theme={theme}>
 
       <CssBaseline />
-      {routing}
+      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+        {routing}
+      </SnackbarProvider>
 
     </ThemeProvider>
   );
