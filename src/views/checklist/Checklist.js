@@ -11,7 +11,7 @@ const TaskList = () => {
 
     useEffect(() => {
         // Fetch the JSON data
-        fetch('http://192.168.1.26:5000/checklist/get') // Assuming checklist.json is in the public directory
+        fetch('http://10.0.10.3:5000/checklist/get') // Assuming checklist.json is in the public directory
             .then(response => response.json())
             .then(data => setTasks(data))
             .catch(error => console.error('Error fetching data:', error));
@@ -30,7 +30,7 @@ const TaskList = () => {
             const blob = new Blob([JSON.stringify(tasks)], { type: 'application/json' });
             formData.append('checklist', blob, 'checklist.json');
 
-            const response = await fetch('http://localhost:5000/checklist/update', {
+            const response = await fetch(`http://10.0.10.3:5000/checklist/update?token=${token}`, {
                 method: 'PUT',
                 body: formData
             });
