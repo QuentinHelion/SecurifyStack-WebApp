@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, ButtonGroup, Button, CircularProgress } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import { Box, ButtonGroup, Button, CircularProgress, LinearProgress } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
 import Form from './Form';
+import Cookies from 'js-cookie';
 
 const initialDeploy1State = {
     target_node: '',
@@ -42,6 +44,14 @@ const initialDeployAnyNamesState = {
     network_tag: '',
     network_config_type: 'dhcp'
 };
+const token = Cookies.get('token');
+
+const networkTagMapping = {
+    'CORE': 10,
+    'MONITORING': 20,
+    'USERS': 40,
+    'EXTERNAL': 80
+};
 
 const DeployPage = () => {
     const [deploy1Data, setDeploy1Data] = useState(initialDeploy1State);
@@ -50,13 +60,15 @@ const DeployPage = () => {
     const [currentForm, setCurrentForm] = useState('Deploy-1');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [bridges, setBridges] = useState([]);
     const [templates, setTemplates] = useState([]);
+    const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://10.0.10.3:5000/fetch-proxmox-data?token=dHbGlH5HQL3PrF5E');
+                const response = await axios.get(`http://10.0.10.3:5000/fetch-proxmox-data?token=${token}`);
                 setBridges(response.data.bridges);
                 setTemplates(response.data.templates);
                 setLoading(false);
@@ -76,21 +88,21 @@ const DeployPage = () => {
             case 'Deploy-1':
                 setDeploy1Data({
                     ...deploy1Data,
-                    [name]: name === 'vm_id' || name === 'cores' || name === 'sockets' || name === 'memory' || name === 'network_tag'
+                    [name]: name === 'vm_id' || name === 'cores' || name === 'sockets' || name === 'memory'
                         ? Number(value) : value
                 });
                 break;
             case 'Deploy-any-count':
                 setDeployAnyCountData({
                     ...deployAnyCountData,
-                    [name]: name === 'vm_count' || name === 'start_vmid' || name === 'network_tag'
+                    [name]: name === 'vm_count' || name === 'start_vmid'
                         ? Number(value) : value
                 });
                 break;
             case 'Deploy-any-names':
                 setDeployAnyNamesData({
                     ...deployAnyNamesData,
-                    [name]: name === 'start_vmid' || name === 'network_tag'
+                    [name]: name === 'start_vmid'
                         ? Number(value) : name === 'hostnames'
                             ? value.split(',').map(h => h.trim()) : value
                 });
@@ -102,17 +114,30 @@ const DeployPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
 
         let dataToSend;
         switch (currentForm) {
             case 'Deploy-1':
-                dataToSend = { ...deploy1Data, case: currentForm };
+                dataToSend = {
+                    ...deploy1Data,
+                    network_tag: networkTagMapping[deploy1Data.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             case 'Deploy-any-count':
-                dataToSend = { ...deployAnyCountData, case: currentForm };
+                dataToSend = {
+                    ...deployAnyCountData,
+                    network_tag: networkTagMapping[deployAnyCountData.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             case 'Deploy-any-names':
-                dataToSend = { ...deployAnyNamesData, case: currentForm };
+                dataToSend = {
+                    ...deployAnyNamesData,
+                    network_tag: networkTagMapping[deployAnyNamesData.network_tag], // Convert label to VLAN ID
+                    case: currentForm
+                };
                 break;
             default:
                 break;
@@ -121,10 +146,14 @@ const DeployPage = () => {
         console.log('Form Data as JSON:', dataToSend);
 
         try {
-            const response = await axios.post('http://10.0.10.3:5000/run-terraform?token=dHbGlH5HQL3PrF5E', dataToSend);
+            const response = await axios.post(`http://10.0.10.3:5000/run-terraform?token=${token}`, dataToSend);
             console.log('Server response:', response.data);
+            enqueueSnackbar('VM creation successful!', { variant: 'success', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
             console.error('Error sending data to the server:', error);
+            enqueueSnackbar('Operation failed. Please try again.', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -149,7 +178,7 @@ const DeployPage = () => {
 
                 fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ]);
 
                 if (showAdvanced) {
@@ -163,6 +192,7 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             case 'Deploy-any-count':
                 fields = [
                     { label: 'Template', name: 'clone', type: 'select', options: templates, required: true },
@@ -181,7 +211,7 @@ const DeployPage = () => {
 
                 fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ]);
 
                 if (showAdvanced) {
@@ -195,6 +225,7 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             case 'Deploy-any-names':
                 fields = [
                     { label: 'Template', name: 'clone', type: 'select', options: templates, required: true },
@@ -212,7 +243,7 @@ const DeployPage = () => {
 
                 fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
-                    { label: 'Network Tag', name: 'network_tag', type: 'number', required: true }
+                    { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
                 ]);
 
                 if (showAdvanced) {
@@ -226,12 +257,14 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             default:
                 break;
         }
 
         return fields;
     };
+
 
     return (
         <Box>
@@ -250,12 +283,15 @@ const DeployPage = () => {
                 {loading ? (
                     <CircularProgress />
                 ) : (
-                    <Form
-                        fields={renderFormFields()}
-                        formData={currentForm === 'Deploy-1' ? deploy1Data : currentForm === 'Deploy-any-count' ? deployAnyCountData : deployAnyNamesData}
-                        handleChange={handleChange}
-                        handleSubmit={handleSubmit}
-                    />
+                    <>
+                        {submitting && <LinearProgress />}
+                        <Form
+                            fields={renderFormFields()}
+                            formData={currentForm === 'Deploy-1' ? deploy1Data : currentForm === 'Deploy-any-count' ? deployAnyCountData : deployAnyNamesData}
+                            handleChange={handleChange}
+                            handleSubmit={handleSubmit}
+                        />
+                    </>
                 )}
                 <Box mt={2}>
                     <Button
@@ -267,6 +303,7 @@ const DeployPage = () => {
                     </Button>
                 </Box>
             </Box>
+
         </Box>
     );
 };

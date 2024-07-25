@@ -10,15 +10,17 @@ import {
     Stack,
     Checkbox
 } from '@mui/material';
-import { useNavigate  } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import axios from "axios";
 
+
+
 const AuthLogin = ({ title }) => {
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
-    const bckAddr = "http://localhost:5000"; // Ensure the protocol is included
+    const bckAddr = "http://10.0.10.3:5000"; // Ensure the protocol is included
 
     const handleToggleState = async () => {
         try {
@@ -31,6 +33,7 @@ const AuthLogin = ({ title }) => {
             const response = await axios.get(`${bckAddr}/login`, { params });
 
             Cookies.set('token', response.data.message, { expires: 7 }); // Expires in 7 days
+
             navigate('/');
 
         } catch (error) {
@@ -60,6 +63,7 @@ const AuthLogin = ({ title }) => {
                             label="Remember this Device"
                         />
                     </FormGroup>
+
                 </Stack>
             </Stack>
             <Box>
