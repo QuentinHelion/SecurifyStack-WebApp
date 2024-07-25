@@ -1,5 +1,5 @@
 import {
-  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus, IconChecks,
+  IconAperture, IconLayoutDashboard, IconLogin, IconMoodHappy, IconUserPlus, IconChecks,
   IconSettingsAutomation
 } from '@tabler/icons';
 
@@ -27,22 +27,6 @@ const Menuitems = [
     title: 'Deploy VMs',
     icon: IconSettingsAutomation,
     href: '/form',
-  },
-  {
-    navlabel: true,
-    subheader: 'Utilities',
-  },
-  {
-    id: uniqueId(),
-    title: 'Typography',
-    icon: IconTypography,
-    href: '/ui/typography',
-  },
-  {
-    id: uniqueId(),
-    title: 'Shadow',
-    icon: IconCopy,
-    href: '/ui/shadow',
   },
   {
     navlabel: true,
