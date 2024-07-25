@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import { useSnackbar } from 'notistack';
 import Cookies from 'js-cookie';
 import {
     Box,
@@ -15,9 +16,12 @@ import CustomTextField from '../../../components/forms/theme-elements/CustomText
 import axios from "axios";
 
 
-
 const AuthLogin = ({ title }) => {
     const navigate = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
+    // const bckAddr = process.env.BACKEND_ADDRESS;
+    const bckAddr = "localhost:5000";
+
     const handleToggleState = async () => {
         try {
             const params = {
@@ -25,12 +29,14 @@ const AuthLogin = ({ title }) => {
                 dc: 'securify-stack',
                 password: document.getElementById("password").value,
             }
-            const response = await axios.get('http://10.0.10.3:5000/login', {params});
+
+            const response = await axios.get(`http://${bckAddr}/login`, {params});
             Cookies.set('token', response.data.message, { expires: 7 }); // Expires in 7 days
 
             navigate('/');
         } catch (error) {
             console.error('Error fetching data:', error);
+            enqueueSnackbar('Invalid credentials', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         }
     };
 

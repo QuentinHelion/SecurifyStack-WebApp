@@ -27,9 +27,9 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: 'Login',
+    title: 'Logout',
     icon: IconLogin,
-    href: '/auth/login',
+    href: '/auth/logout',
   },
 ];
 

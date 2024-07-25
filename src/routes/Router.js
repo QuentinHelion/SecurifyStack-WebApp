@@ -10,6 +10,7 @@ const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')))
 const Dashboard = Loadable(lazy(() => import('../views/dashboard/Dashboard')))
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
+const Logout = Loadable(lazy(() => import('../views/authentication/Logout')));
 const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
 
 const Router = [
@@ -29,6 +30,7 @@ const Router = [
     children: [
       { path: '404', element: <Error /> },
       { path: '/auth/login', element: <Login /> },
+      { path: '/auth/logout', element: <Logout /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },
