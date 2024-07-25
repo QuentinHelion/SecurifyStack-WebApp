@@ -1,5 +1,5 @@
 import { CssBaseline, ThemeProvider } from '@mui/material';
-import { useRoutes } from 'react-router-dom';
+import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import Router from './routes/Router';
 import { useEffect } from 'react';
 import Cookies from 'js-cookie';
