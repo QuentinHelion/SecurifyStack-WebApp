@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSnackbar } from 'notistack';
-import { Box, ButtonGroup, Button, CircularProgress } from '@mui/material';
+import { Box, ButtonGroup, Button, CircularProgress, LinearProgress } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
 import Form from './Form';
@@ -60,6 +60,7 @@ const DeployPage = () => {
     const [currentForm, setCurrentForm] = useState('Deploy-1');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [bridges, setBridges] = useState([]);
     const [templates, setTemplates] = useState([]);
     const { enqueueSnackbar } = useSnackbar();
@@ -113,6 +114,7 @@ const DeployPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
 
         let dataToSend;
         switch (currentForm) {
@@ -150,6 +152,8 @@ const DeployPage = () => {
         } catch (error) {
             console.error('Error sending data to the server:', error);
             enqueueSnackbar('Operation failed. Please try again.', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -188,17 +192,27 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             case 'Deploy-any-count':
                 fields = [
                     { label: 'Template', name: 'clone', type: 'select', options: templates, required: true },
                     { label: 'Base Name', name: 'base_name', type: 'text', required: true },
                     { label: 'Count', name: 'vm_count', type: 'number', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
-                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
+                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
+                ];
+
+                if (deployAnyCountData.network_config_type === 'static') {
+                    fields = fields.concat([
+                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
+                    ]);
+                }
+
+                fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
-                ];
+                ]);
 
                 if (showAdvanced) {
                     fields = fields.concat([
@@ -211,16 +225,26 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             case 'Deploy-any-names':
                 fields = [
                     { label: 'Template', name: 'clone', type: 'select', options: templates, required: true },
                     { label: 'Hostnames (comma-separated)', name: 'hostnames', type: 'text', required: true },
                     { label: 'Start VMID', name: 'start_vmid', type: 'number', required: true },
-                    { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
-                    { label: 'Gateway', name: 'gw', type: 'text', required: true },
+                    { label: 'Network Configuration Type', name: 'network_config_type', type: 'select', required: true, options: ['dhcp', 'static'] }
+                ];
+
+                if (deployAnyNamesData.network_config_type === 'static') {
+                    fields = fields.concat([
+                        { label: 'Start IP', name: 'start_ip', type: 'text', required: true },
+                        { label: 'Gateway', name: 'gw', type: 'text', required: true }
+                    ]);
+                }
+
+                fields = fields.concat([
                     { label: 'Network Bridge', name: 'network_bridge', type: 'select', options: bridges, required: true },
                     { label: 'Network Tag', name: 'network_tag', type: 'select', options: Object.keys(networkTagMapping), required: true }
-                ];
+                ]);
 
                 if (showAdvanced) {
                     fields = fields.concat([
@@ -233,12 +257,14 @@ const DeployPage = () => {
                     ]);
                 }
                 break;
+
             default:
                 break;
         }
 
         return fields;
     };
+
 
     return (
         <Box>
@@ -257,12 +283,15 @@ const DeployPage = () => {
                 {loading ? (
                     <CircularProgress />
                 ) : (
-                    <Form
-                        fields={renderFormFields()}
-                        formData={currentForm === 'Deploy-1' ? deploy1Data : currentForm === 'Deploy-any-count' ? deployAnyCountData : deployAnyNamesData}
-                        handleChange={handleChange}
-                        handleSubmit={handleSubmit}
-                    />
+                    <>
+                        {submitting && <LinearProgress />}
+                        <Form
+                            fields={renderFormFields()}
+                            formData={currentForm === 'Deploy-1' ? deploy1Data : currentForm === 'Deploy-any-count' ? deployAnyCountData : deployAnyNamesData}
+                            handleChange={handleChange}
+                            handleSubmit={handleSubmit}
+                        />
+                    </>
                 )}
                 <Box mt={2}>
                     <Button
