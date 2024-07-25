@@ -13,7 +13,7 @@ const TaskList = () => {
         const fetchData = async () => {
             try {
                 const token = Cookies.get('token');
-                const response = await fetch(`http://10.0.10.3:5000/checklist/get?token=${token}`);
+                const response = await fetch(`http://localhost:5000/checklist/get?token=${token}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }

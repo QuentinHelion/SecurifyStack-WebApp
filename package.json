@@ -19,6 +19,7 @@
     "bootstrap": "^5.3.3",
     "chance": "^1.1.9",
     "chart.js": "^4.4.3",
+    "dotenv": "^16.4.5",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "notistack": "^3.0.1",

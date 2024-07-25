@@ -8,12 +8,9 @@ const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')))
 
 /* ****Pages***** */
 const Dashboard = Loadable(lazy(() => import('../views/dashboard/Dashboard')))
-const SamplePage = Loadable(lazy(() => import('../views/sample-page/SamplePage')))
-const Icons = Loadable(lazy(() => import('../views/icons/Icons')))
-const TypographyPage = Loadable(lazy(() => import('../views/utilities/TypographyPage')))
-const Shadow = Loadable(lazy(() => import('../views/utilities/Shadow')))
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
+const Logout = Loadable(lazy(() => import('../views/authentication/Logout')));
 const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
 const DeployPage = Loadable(lazy(() => import('../views/form/DeployPage')));
 
@@ -23,13 +20,9 @@ const Router = [
     element: <FullLayout />,
     children: [
       { path: '/', element: <Navigate to="/dashboard" /> },
-      { path: '/checklist', exact: true, element: <Checklist /> },
+      { path: '/checklist', exact: true, element: <Checklist />},
       { path: '/dashboard', exact: true, element: <Dashboard /> },
       { path: '/form', exact: true, element: <DeployPage /> },
-      { path: '/sample-page', exact: true, element: <SamplePage /> },
-      { path: '/icons', exact: true, element: <Icons /> },
-      { path: '/ui/typography', exact: true, element: <TypographyPage /> },
-      { path: '/ui/shadow', exact: true, element: <Shadow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },
@@ -39,6 +32,7 @@ const Router = [
     children: [
       { path: '404', element: <Error /> },
       { path: '/auth/login', element: <Login /> },
+      { path: '/auth/logout', element: <Logout /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },
