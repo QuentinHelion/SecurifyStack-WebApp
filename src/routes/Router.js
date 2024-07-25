@@ -12,6 +12,7 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const Logout = Loadable(lazy(() => import('../views/authentication/Logout')));
 const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
+const DeployPage = Loadable(lazy(() => import('../views/form/DeployPage')));
 
 const Router = [
   {
@@ -21,6 +22,11 @@ const Router = [
       { path: '/', element: <Navigate to="/dashboard" /> },
       { path: '/checklist', exact: true, element: <Checklist />},
       { path: '/dashboard', exact: true, element: <Dashboard /> },
+      { path: '/form', exact: true, element: <DeployPage /> },
+      { path: '/sample-page', exact: true, element: <SamplePage /> },
+      { path: '/icons', exact: true, element: <Icons /> },
+      { path: '/ui/typography', exact: true, element: <TypographyPage /> },
+      { path: '/ui/shadow', exact: true, element: <Shadow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },

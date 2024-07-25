@@ -29,16 +29,14 @@ Chart.register(
 const Dashboard = () => {
     const [performanceData, setPerformanceData] = useState([]);
     const [selectedResource, setSelectedResource] = useState('cpu');
-    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const params = {
                     token: Cookies.get('token')
                 }
-                // const bckAddr = process.env.BACKEND_ADDRESS;
-                const bckAddr = "localhost:5000";
-                const response = await axios.get(`http://${bckAddr}/stats/proxmox`, {params});
+                const response = await axios.get('http://localhost:5000/stats/proxmox', {params});
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
