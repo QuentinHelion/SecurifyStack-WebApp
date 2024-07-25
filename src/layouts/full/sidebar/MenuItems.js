@@ -1,5 +1,5 @@
 import {
-  IconAperture, IconLayoutDashboard, IconLogin, IconMoodHappy, IconUserPlus, IconChecks,
+  IconLayoutDashboard, IconLogin, IconChecks,
   IconSettingsAutomation
 } from '@tabler/icons';
 
@@ -34,31 +34,9 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: 'Login',
+    title: 'Logout',
     icon: IconLogin,
-    href: '/auth/login',
-  },
-  {
-    id: uniqueId(),
-    title: 'Register',
-    icon: IconUserPlus,
-    href: '/auth/register',
-  },
-  {
-    navlabel: true,
-    subheader: 'Extra',
-  },
-  {
-    id: uniqueId(),
-    title: 'Icons',
-    icon: IconMoodHappy,
-    href: '/icons',
-  },
-  {
-    id: uniqueId(),
-    title: 'Sample Page',
-    icon: IconAperture,
-    href: '/sample-page',
+    href: '/auth/logout',
   },
 ];
 
