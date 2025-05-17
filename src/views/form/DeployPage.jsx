@@ -68,7 +68,7 @@ const DeployPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`http://10.0.10.3:5000/fetch-proxmox-data?token=${token}`);
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/fetch-proxmox-data?token=${token}`);
                 setBridges(response.data.bridges);
                 setTemplates(response.data.templates);
                 setLoading(false);
@@ -146,7 +146,7 @@ const DeployPage = () => {
         console.log('Form Data as JSON:', dataToSend);
 
         try {
-            const response = await axios.post(`http://10.0.10.3:5000/run-terraform?token=${token}`, dataToSend);
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_ADDR}/run-terraform?token=${token}`, dataToSend);
             console.log('Server response:', response.data);
             enqueueSnackbar('VM creation successful!', { variant: 'success', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {

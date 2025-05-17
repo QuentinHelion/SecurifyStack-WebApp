@@ -22,7 +22,7 @@ const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
                                 <Select
                                     id={field.name}
                                     name={field.name}
-                                    value={formData[field.name]}
+                                    value={formData[field.name] !== undefined ? formData[field.name] : ''}
                                     onChange={handleChange}
                                     required={field.required}
                                     variant="outlined"
@@ -41,7 +41,7 @@ const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
                                 type={field.type || 'text'}
                                 variant="outlined"
                                 fullWidth
-                                value={formData[field.name]}
+                                value={formData[field.name] !== undefined ? formData[field.name] : ''}
                                 onChange={handleChange}
                                 required={field.required}
                             />

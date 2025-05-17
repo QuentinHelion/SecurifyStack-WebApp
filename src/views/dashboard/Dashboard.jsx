@@ -37,11 +37,11 @@ const Dashboard = () => {
                 const params = {
                     token: Cookies.get('token')
                 }
-                const response = await axios.get('http://10.0.10.3:5000/stats/proxmox', { params });
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/stats/proxmox`, { params });
                 setPerformanceData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
-                if (error.response.status === 401) {
+                if (error.response && error.response.status === 401) {
                     Cookies.remove('token');
                     navigate('/auth/login')
                 }
@@ -49,7 +49,7 @@ const Dashboard = () => {
         };
 
         fetchData();
-    },);
+    }, []);
 
     const handleResourceChange = (event) => {
         setSelectedResource(event.target.value);

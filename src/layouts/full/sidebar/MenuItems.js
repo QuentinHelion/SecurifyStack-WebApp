@@ -1,7 +1,8 @@
 import {
   IconLayoutDashboard, IconLogin, IconChecks,
-  IconSettingsAutomation
-} from '@tabler/icons';
+  IconSettingsAutomation,
+  IconDeviceImac
+} from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
 
@@ -27,6 +28,13 @@ const Menuitems = [
     title: 'Deploy VMs',
     icon: IconSettingsAutomation,
     href: '/form',
+  },
+  {
+    id: uniqueId(),
+    title: 'Conceptify',
+    icon: IconDeviceImac,
+    href: '/conceptify',
+    external: true,
   },
   {
     navlabel: true,
