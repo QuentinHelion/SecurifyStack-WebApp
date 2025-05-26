@@ -59,7 +59,8 @@
     "postcss": "^8.5.3",
     "prettier": "^2.3.1",
     "tailwindcss": "^4.1.7",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vite-plugin-svgr": "^4.1.0"
   },
   "scripts": {
     "start": "vite --host --port 3333",
