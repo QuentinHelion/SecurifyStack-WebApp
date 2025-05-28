@@ -251,13 +251,13 @@ export default function App() {
     return (
         <DndProvider backend={HTML5Backend}>
             <Box className="p-4">
-                <a
-                    href="/dashboard"
+                <button
+                    onClick={() => window.close()}
                     className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                    style={{ textDecoration: 'none' }}
+                    style={{ textDecoration: 'none', border: 'none', cursor: 'pointer' }}
                 >
                     ← Return to Dashboard
-                </a>
+                </button>
             </Box>
             <Box className="flex flex-col h-screen bg-gray-100">
                 <Box className="flex flex-grow">
