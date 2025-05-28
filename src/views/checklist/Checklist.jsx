@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, CardContent } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import CardContent from '@mui/material/CardContent';
 import BlankCard from 'src/components/shared/BlankCard';
 import Cookies from 'js-cookie';
 import Container from 'react-bootstrap/Container';

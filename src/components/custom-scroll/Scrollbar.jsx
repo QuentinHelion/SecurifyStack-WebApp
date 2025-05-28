@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types';
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
-import { Box, styled } from '@mui/material';
+import Box from '@mui/material/Box';
+import { styled } from '@mui/material/styles';
 
 const SimpleBarStyle = styled(SimpleBar)(() => ({
   maxHeight: '100%',

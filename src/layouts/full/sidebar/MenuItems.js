@@ -1,10 +1,10 @@
-import {
-  IconLayoutDashboard, IconLogin, IconChecks,
-  IconSettingsAutomation,
-  IconDeviceImac
-} from '@tabler/icons-react';
+import IconLayoutDashboard from '@tabler/icons-react/dist/esm/icons/IconLayoutDashboard';
+import IconLogin from '@tabler/icons-react/dist/esm/icons/IconLogin';
+import IconChecks from '@tabler/icons-react/dist/esm/icons/IconChecks';
+import IconSettingsAutomation from '@tabler/icons-react/dist/esm/icons/IconSettingsAutomation';
+import IconDeviceImac from '@tabler/icons-react/dist/esm/icons/IconDeviceImac';
 
-import { uniqueId } from 'lodash';
+import uniqueId from 'lodash/uniqueId';
 
 const Menuitems = [
   {

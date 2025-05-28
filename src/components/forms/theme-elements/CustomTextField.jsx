@@ -1,6 +1,6 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
-import { TextField } from '@mui/material';
+import TextField from '@mui/material/TextField';
 
 const CustomTextField = styled((props) => <TextField {...props} />)(({ theme }) => ({
   '& .MuiOutlinedInput-input::-webkit-input-placeholder': {

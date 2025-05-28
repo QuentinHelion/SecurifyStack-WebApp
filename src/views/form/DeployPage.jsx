@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSnackbar } from 'notistack';
-import { Box, ButtonGroup, Button, CircularProgress, LinearProgress } from '@mui/material';
+import Box from '@mui/material/Box';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
 import Form from './Form';
