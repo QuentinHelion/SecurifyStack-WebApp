@@ -20,13 +20,12 @@ import axios from "axios";
 const AuthLogin = ({ title }) => {
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
-    const bckAddr = "http://10.0.10.3:5000"; // Ensure the protocol is included
+    const bckAddr = import.meta.env.VITE_BACKEND_ADDR; // Use Vite env variable
 
     const handleToggleState = async () => {
         try {
             const params = {
                 cn: document.getElementById("username").value,
-                dc: 'securify-stack',
                 password: document.getElementById("password").value,
             };
 

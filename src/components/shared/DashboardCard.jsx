@@ -1,5 +1,9 @@
 import React from 'react';
-import { Card, CardContent, Typography, Stack, Box } from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
 
 const DashboardCard = ({
   title,

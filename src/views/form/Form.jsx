@@ -1,5 +1,11 @@
 import React from 'react';
-import { Box, Typography, Button, Stack, MenuItem, Select, FormControl } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
 
 const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
@@ -22,7 +28,7 @@ const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
                                 <Select
                                     id={field.name}
                                     name={field.name}
-                                    value={formData[field.name]}
+                                    value={formData[field.name] !== undefined ? formData[field.name] : ''}
                                     onChange={handleChange}
                                     required={field.required}
                                     variant="outlined"
@@ -41,7 +47,7 @@ const Form = ({ fields = [], formData, handleChange, handleSubmit }) => {
                                 type={field.type || 'text'}
                                 variant="outlined"
                                 fullWidth
-                                value={formData[field.name]}
+                                value={formData[field.name] !== undefined ? formData[field.name] : ''}
                                 onChange={handleChange}
                                 required={field.required}
                             />

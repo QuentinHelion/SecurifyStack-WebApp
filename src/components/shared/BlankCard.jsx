@@ -1,4 +1,4 @@
-import { Card } from '@mui/material';
+import Card from '@mui/material/Card';
 import React from 'react';
 import PropTypes from 'prop-types';
 

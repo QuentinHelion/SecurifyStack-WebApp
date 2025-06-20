@@ -1,4 +1,7 @@
-import { Box, Container, Typography, Button } from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
 import ErrorImg from 'src/assets/images/backgrounds/404-error-idea.gif';
 

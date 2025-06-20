@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, CardContent } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import CardContent from '@mui/material/CardContent';
 import BlankCard from 'src/components/shared/BlankCard';
 import Cookies from 'js-cookie';
 import Container from 'react-bootstrap/Container';
@@ -13,7 +14,7 @@ const TaskList = () => {
         const fetchData = async () => {
             try {
                 const token = Cookies.get('token');
-                const response = await fetch(`http://10.0.10.3:5000/checklist/get?token=${token}`);
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/checklist/get?token=${token}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -41,7 +42,7 @@ const TaskList = () => {
             const blob = new Blob([JSON.stringify(updatedTasks)], { type: 'application/json' });
             formData.append('checklist', blob, 'checklist.json');
 
-            const response = await fetch(`http://10.0.10.3:5000/checklist/update?token=${token}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/checklist/update?token=${token}`, {
                 method: 'PUT',
                 body: formData
             });
