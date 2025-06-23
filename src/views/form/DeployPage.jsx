@@ -71,19 +71,29 @@ const DeployPage = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/fetch-proxmox-data?token=${token}`);
-                setBridges(response.data.bridges);
-                setTemplates(response.data.templates);
-                setLoading(false);
+                const token = Cookies.get('token');
+                if (!token) {
+                    enqueueSnackbar('Authentication token not found.', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
+                    setLoading(false);
+                    return;
+                }
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/fetch-proxmox-data`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setBridges(response.data.bridges || []);
+                setTemplates(response.data.templates || []);
             } catch (error) {
                 console.error('Error fetching Proxmox data:', error);
+                enqueueSnackbar('Failed to fetch Proxmox data. Please check connection and configuration.', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [enqueueSnackbar]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
