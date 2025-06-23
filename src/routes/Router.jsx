@@ -14,6 +14,7 @@ const Logout = Loadable(lazy(() => import('../views/authentication/Logout')));
 const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
 const DeployPage = Loadable(lazy(() => import('../views/form/DeployPage')));
 const ConceptifyApp = Loadable(lazy(() => import('../views/conceptify/App')));
+const ControlPanel = Loadable(lazy(() => import('../views/control-panel/ControlPanel')));
 
 const Router = [
   {
@@ -28,6 +29,7 @@ const Router = [
       { path: '/checklist', exact: true, element: <Checklist /> },
       { path: '/dashboard', exact: true, element: <Dashboard /> },
       { path: '/form', exact: true, element: <DeployPage /> },
+      { path: '/control-panel', exact: true, element: <ControlPanel /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },

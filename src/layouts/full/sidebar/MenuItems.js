@@ -3,6 +3,7 @@ import IconLogin from '@tabler/icons-react/dist/esm/icons/IconLogin';
 import IconChecks from '@tabler/icons-react/dist/esm/icons/IconChecks';
 import IconSettingsAutomation from '@tabler/icons-react/dist/esm/icons/IconSettingsAutomation';
 import IconDeviceImac from '@tabler/icons-react/dist/esm/icons/IconDeviceImac';
+import IconSettings from '@tabler/icons-react/dist/esm/icons/IconSettings';
 
 import uniqueId from 'lodash/uniqueId';
 
@@ -28,6 +29,12 @@ const Menuitems = [
     title: 'Deploy VMs',
     icon: IconSettingsAutomation,
     href: '/form',
+  },
+  {
+    id: uniqueId(),
+    title: 'Control Panel',
+    icon: IconSettings,
+    href: '/control-panel',
   },
   {
     id: uniqueId(),
