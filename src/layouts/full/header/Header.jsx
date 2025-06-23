@@ -1,9 +1,7 @@
 import React from 'react';
 import { AppBar, Toolbar, styled, IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
-
-// components
-import { IconMenu } from '@tabler/icons';
+import { IconMenu } from '@tabler/icons-react';
 
 const Header = (props) => {
 

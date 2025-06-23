@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSnackbar } from 'notistack';
 import {
     Typography,
     Grid,
@@ -12,6 +13,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from 'src/components/shared/DashboardCard';
 
 const ControlPanel = () => {
+    const { enqueueSnackbar } = useSnackbar();
     const [proxmoxServer, setProxmoxServer] = useState('');
     const [proxmoxNode, setProxmoxNode] = useState('');
     const [proxmoxToken, setProxmoxToken] = useState('');
@@ -20,12 +22,39 @@ const ControlPanel = () => {
     const [ldapsCert, setLdapsCert] = useState('');
     const [ldapsBaseDN, setLdapsBaseDN] = useState('');
     const [ldapsUserOU, setLdapsUserOU] = useState('');
-    const [proxmoxTestResult, setProxmoxTestResult] = useState(null);
-    const [ldapsTestResult, setLdapsTestResult] = useState(null);
-    const [saveResult, setSaveResult] = useState(null);
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/get-config`);
+                const data = await response.json();
+
+                // Map backend keys to frontend state setters
+                const keyMap = {
+                    "PROXMOX_SERVER": setProxmoxServer,
+                    "NODE": setProxmoxNode,
+                    "PVEAPITOKEN": setProxmoxToken,
+                    "LDAPS_SERVER": setLdapsServer,
+                    "LDAPS_PORT": setLdapsPort,
+                    "LDAPS_CERT": setLdapsCert,
+                    "LDAPS_BASE_DN": setLdapsBaseDN,
+                    "LDAPS_USER_OU": setLdapsUserOU
+                };
+
+                for (const [key, value] of Object.entries(data)) {
+                    if (keyMap[key]) {
+                        keyMap[key](value === null || value === undefined ? '' : String(value));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch config:', error);
+                enqueueSnackbar('Failed to fetch configuration', { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
+            }
+        };
+        fetchConfig();
+    }, []);
 
     const handleProxmoxTest = async () => {
-        setProxmoxTestResult(null);
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/test-proxmox`, {
                 method: 'POST',
@@ -33,14 +62,14 @@ const ControlPanel = () => {
                 body: JSON.stringify({ proxmoxServer, proxmoxNode, proxmoxToken }),
             });
             const result = await response.json();
-            setProxmoxTestResult(result);
+            const variant = result.status === 'success' ? 'success' : 'error';
+            enqueueSnackbar(result.message, { variant, anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
-            setProxmoxTestResult({ status: 'error', message: `An error occurred: ${error.message}` });
+            enqueueSnackbar(`An error occurred: ${error.message}`, { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         }
     };
 
     const handleLdapsTest = async () => {
-        setLdapsTestResult(null);
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/test-ldaps`, {
                 method: 'POST',
@@ -48,14 +77,14 @@ const ControlPanel = () => {
                 body: JSON.stringify({ ldapsServer, ldapsPort, ldapsBaseDN, ldapsCert }),
             });
             const result = await response.json();
-            setLdapsTestResult(result);
+            const variant = result.status === 'success' ? 'success' : 'error';
+            enqueueSnackbar(result.message, { variant, anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
-            setLdapsTestResult({ status: 'error', message: `An error occurred: ${error.message}` });
+            enqueueSnackbar(`An error occurred: ${error.message}`, { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         }
     };
 
     const handleSaveConfig = async () => {
-        setSaveResult(null);
         const configData = {
             proxmoxServer,
             proxmoxNode,
@@ -73,13 +102,12 @@ const ControlPanel = () => {
                 body: JSON.stringify(configData),
             });
             const result = await response.json();
-            setSaveResult(result);
+            const variant = result.status === 'success' ? 'success' : 'error';
+            enqueueSnackbar(result.message, { variant, anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
-            setSaveResult({ status: 'error', message: `An error occurred: ${error.message}` });
+            enqueueSnackbar(`An error occurred: ${error.message}`, { variant: 'error', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         }
     };
-
-    const canSave = proxmoxTestResult?.status === 'success' && ldapsTestResult?.status === 'success';
 
     return (
         <PageContainer title="Control Panel" description="Control Panel for backend settings">
@@ -127,14 +155,6 @@ const ControlPanel = () => {
                         </Grid>
                     </Grid>
 
-                    {proxmoxTestResult && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography color={proxmoxTestResult.status === 'success' ? 'green' : 'red'}>
-                                {proxmoxTestResult.message}
-                            </Typography>
-                        </Box>
-                    )}
-
                     <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>LDAPS Configuration</Typography>
                     <Grid container spacing={3}>
                         <Grid item xs={12} sm={8}>
@@ -163,9 +183,11 @@ const ControlPanel = () => {
                                 label="LDAPS Certificate"
                                 value={ldapsCert}
                                 onChange={(e) => setLdapsCert(e.target.value)}
-                                placeholder="Paste your certificate here or provide a path"
+                                placeholder="Paste certificate content OR provide an absolute server path"
                                 autoComplete="off"
                                 required
+                                multiline
+                                rows={4}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -196,27 +218,11 @@ const ControlPanel = () => {
                         </Grid>
                     </Grid>
 
-                    {ldapsTestResult && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography color={ldapsTestResult.status === 'success' ? 'green' : 'red'}>
-                                {ldapsTestResult.message}
-                            </Typography>
-                        </Box>
-                    )}
-
                     <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button variant="contained" color="primary" onClick={handleSaveConfig} disabled={!canSave}>
+                        <Button variant="contained" color="primary" onClick={handleSaveConfig}>
                             Save Configuration
                         </Button>
                     </Box>
-
-                    {saveResult && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography color={saveResult.status === 'success' ? 'green' : 'red'}>
-                                {saveResult.message}
-                            </Typography>
-                        </Box>
-                    )}
                 </CardContent>
             </DashboardCard>
         </PageContainer>

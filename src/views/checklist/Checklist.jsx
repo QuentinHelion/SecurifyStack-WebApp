@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Grid from '@mui/material/Grid';
-import CardContent from '@mui/material/CardContent';
+import { Grid, Card, CardContent, Checkbox, Typography, Box } from '@mui/material';
 import BlankCard from 'src/components/shared/BlankCard';
 import Cookies from 'js-cookie';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
@@ -63,22 +59,21 @@ const TaskList = () => {
                 <Grid item sm={12} key={index}>
                     <BlankCard>
                         <CardContent>
-                            <Container>
-                                <Row className='p-2'>
-                                    <Col xs={1} md={1} lg={1} className='d-flex justify-content-center align-items-center w-25'>
-                                        <input
-                                            type="checkbox"
-                                            checked={task.state}
-                                            className="big-checkbox"
-                                            onChange={() => handleToggleState(index)}
-                                        />
-                                    </Col>
-                                    <Col xs={11} md={11} lg={11} className='w-75 d-flex flex-wrap align-items-center'>
-                                        <h3 className='w-100 mb-2'>{task.name}</h3>
-                                        <p>{task.description}</p>
-                                    </Col>
-                                </Row>
-                            </Container>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Checkbox
+                                    checked={task.state}
+                                    onChange={() => handleToggleState(index)}
+                                    inputProps={{ 'aria-label': task.name }}
+                                />
+                                <Box sx={{ ml: 2 }}>
+                                    <Typography variant="h5" component="div">
+                                        {task.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {task.description}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </CardContent>
                     </BlankCard>
                 </Grid>

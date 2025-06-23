@@ -14,7 +14,6 @@
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.8",
-    "bootstrap": "^5.3.3",
     "chart.js": "^4.4.3",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
