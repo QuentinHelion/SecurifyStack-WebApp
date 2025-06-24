@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, Button } from '@mui/material';
 import LegendItem from './components/LegendItem';
 import VlanPanel from './components/VlanPanel';
 import BoardView from './components/BoardView';
@@ -63,6 +63,9 @@ export default function App() {
 
     // ID counters for legend items
     const itemCounters = useRef({});
+
+    // edit mode
+    const [isEditable, setIsEditable] = useState(true);
 
     // load saved state (10-min TTL)
     useEffect(() => {
@@ -250,85 +253,93 @@ export default function App() {
     };
 
     return (
-        <DndProvider backend={HTML5Backend}>
-            <Box className="flex flex-col h-screen bg-gray-100">
-                <Box className="flex flex-grow">
-                    {/* Legend + VLAN panel */}
-                    <Paper elevation={3} className="w-64 p-4 overflow-y-auto">
-                        <button
-                            onClick={() => window.close()}
-                            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition mb-4"
-                            style={{ textDecoration: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                            ← Return to Dashboard
-                        </button>
-                        <Typography variant="h6" gutterBottom>
-                            Legend
-                        </Typography>
-                        {legendItems.map(li => (
-                            <LegendItem key={li.id} {...li} />
-                        ))}
-
-                        <VlanPanel
-                            vlans={vlans}
-                            newVlanId={newVlanId}
-                            setNewVlanId={setNewVlanId}
-                            newVlanName={newVlanName}
-                            setNewVlanName={setNewVlanName}
-                            newVlanColor={newVlanColor}
-                            setNewVlanColor={setNewVlanColor}
-                            onAddVlan={handleAddVlan}
-                            onColorChange={handleVlanColorChange}
-                        />
-                    </Paper>
-
-                    {/* Board */}
-                    <Box className="flex flex-col flex-grow">
-                        <BoardView
-                            whiteboardItems={whiteboardItems}
-                            vlans={vlans}
-                            rolesMap={roles}
-                            legendItems={legendItems}
-                            gridSize={GRID_SIZE}
-                            occupiedCells={occupiedCells}
-                            onDrop={handleDrop}
-                            onDeleteItem={handleDeleteItem}
-                            onRoleToggle={(id, r) =>
-                                setWhiteboardItems(ws =>
-                                    ws.map(i =>
-                                        i.id === id
-                                            ? {
-                                                ...i, roles: i.roles.includes(r)
-                                                    ? i.roles.filter(x => x !== r)
-                                                    : [...i.roles, r]
-                                            }
-                                            : i
-                                    )
-                                )
-                            }
-                            onVlanChange={(id, vs) =>
-                                setWhiteboardItems(ws =>
-                                    ws.map(i => i.id === id ? { ...i, vlans: vs } : i)
-                                )
-                            }
-                            onGroupChange={(id, grp) =>
-                                setWhiteboardItems(ws =>
-                                    ws.map(i => i.id === id ? { ...i, group: grp } : i)
-                                )
-                            }
-                            onAdvancedChange={handleAdvancedChange}
-                        />
-                    </Box>
-                </Box>
-
-                <FooterActions
-                    onSaveWork={saveWork}
-                    onGenerateConfig={generateConfigFiles}
-                    onClearCache={handleClearCache}
-                    snackbarOpen={snackbarOpen}
-                    onCloseSnackbar={() => setSnackbarOpen(false)}
-                />
+        <Box className="conceptify-root" sx={{ height: '100vh', overflow: 'hidden', pb: 2 }}>
+            {/* Header Bar */}
+            <Box display="flex" alignItems="center" sx={{ mb: 1, mt: 1, px: 3, height: 44, background: '#f7fafd', borderBottom: '1px solid #e0e0e0' }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: 1, fontSize: 22 }}>
+                    Conceptify
+                </Typography>
+                <Box flexGrow={1} />
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => setIsEditable(e => !e)}
+                    sx={{ minWidth: 120 }}
+                >
+                    {isEditable ? 'View Only' : 'Edit Mode'}
+                </Button>
             </Box>
-        </DndProvider>
+            <DndProvider backend={HTML5Backend}>
+                <Box className="flex flex-col" sx={{ height: 'calc(100vh - 44px)', overflow: 'hidden', pb: 2 }}>
+                    <Box className="flex flex-grow" sx={{ minHeight: 0, height: '100%' }}>
+                        {isEditable && (
+                            <Paper elevation={3} className="w-64 p-2 overflow-y-auto" sx={{ maxHeight: '100%' }}>
+                                <Typography variant="h6" gutterBottom sx={{ mb: 1 }}>
+                                    Legend
+                                </Typography>
+                                {legendItems.map(li => (
+                                    <LegendItem key={li.id} {...li} />
+                                ))}
+                                <VlanPanel
+                                    vlans={vlans}
+                                    newVlanId={newVlanId}
+                                    setNewVlanId={setNewVlanId}
+                                    newVlanName={newVlanName}
+                                    setNewVlanName={setNewVlanName}
+                                    newVlanColor={newVlanColor}
+                                    setNewVlanColor={setNewVlanColor}
+                                    onAddVlan={handleAddVlan}
+                                    onColorChange={handleVlanColorChange}
+                                />
+                            </Paper>
+                        )}
+                        <Box className="flex flex-col flex-grow" sx={{ minHeight: 0, height: '100%', width: '100%' }}>
+                            <BoardView
+                                whiteboardItems={whiteboardItems}
+                                vlans={vlans}
+                                rolesMap={roles}
+                                legendItems={legendItems}
+                                gridSize={GRID_SIZE}
+                                occupiedCells={occupiedCells}
+                                onDrop={isEditable ? handleDrop : undefined}
+                                onDeleteItem={isEditable ? handleDeleteItem : undefined}
+                                onRoleToggle={isEditable ? (id, r) =>
+                                    setWhiteboardItems(ws =>
+                                        ws.map(i =>
+                                            i.id === id
+                                                ? {
+                                                    ...i, roles: i.roles.includes(r)
+                                                        ? i.roles.filter(x => x !== r)
+                                                        : [...i.roles, r]
+                                                }
+                                                : i
+                                        )
+                                    )
+                                    : undefined}
+                                onVlanChange={isEditable ? (id, vs) =>
+                                    setWhiteboardItems(ws =>
+                                        ws.map(i => i.id === id ? { ...i, vlans: vs } : i)
+                                    )
+                                    : undefined}
+                                onGroupChange={isEditable ? (id, grp) =>
+                                    setWhiteboardItems(ws =>
+                                        ws.map(i => i.id === id ? { ...i, group: grp } : i)
+                                    )
+                                    : undefined}
+                                onAdvancedChange={isEditable ? handleAdvancedChange : undefined}
+                                isEditable={isEditable}
+                            />
+                        </Box>
+                    </Box>
+                    {isEditable && (
+                        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ minHeight: 'auto', height: 'auto', py: 1, px: 3 }}>
+                            <Button variant="contained" color="primary" onClick={saveWork} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Save Work</Button>
+                            <Button variant="contained" color="secondary" onClick={generateConfigFiles} sx={{ minWidth: 180, fontSize: 14, py: 1 }}>Generate Config Files</Button>
+                            <Button variant="outlined" color="error" onClick={handleClearCache} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Clear Cache</Button>
+                        </Box>
+                    )}
+                </Box>
+            </DndProvider>
+        </Box>
     );
 }

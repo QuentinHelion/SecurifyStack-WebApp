@@ -45,19 +45,18 @@ export default function WhiteboardItem({
   onAdvancedChange,
   onContextMenu,
   gridSize = 50,
+  isEditable = true,
 }) {
-  // Drag state
+  // All hooks must be declared before any return!
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'whiteboardItem',
     item: { ...item },
     collect: m => ({ isDragging: !!m.isDragging() }),
-  }));
+    canDrag: isEditable,
+  }), [isEditable, item]);
 
-  // Popover for Roles/VLANs
   const [anchorEl, setAnchorEl] = useState(null);
   const openPopover = Boolean(anchorEl);
-
-  // Advanced dialog
   const [advOpen, setAdvOpen] = useState(false);
 
   // Pull advanced settings or defaults
@@ -70,7 +69,6 @@ export default function WhiteboardItem({
   const ipAddress = adv.ipAddress || '';
   const subnetMask = adv.subnetMask || '24';
 
-  // Local-IP + validation
   const [localIp, setLocalIp] = useState(ipAddress);
   const [ipError, setIpError] = useState('');
 
@@ -79,36 +77,19 @@ export default function WhiteboardItem({
     setIpError('');
   }, [ipAddress, ipMode]);
 
-  // ─── Handlers ──────────────────────────────────────────────────────────────
+  // Handlers (unchanged)
   const handleClick = e => setAnchorEl(e.currentTarget);
   const handlePopoverClose = () => setAnchorEl(null);
   const handleAdvOpen = () => { setAnchorEl(null); setAdvOpen(true); };
   const handleAdvClose = () => setAdvOpen(false);
-
-  const handlePerfSelect = value =>
-    onAdvancedChange(item.id, { ...adv, perf: value });
-
-  const handleMonitorToggle = e =>
-    onAdvancedChange(item.id, { ...adv, monitoring: e.target.checked });
-
-  const handleUsernameChange = e =>
-    onAdvancedChange(item.id, { ...adv, username: e.target.value });
-
-  const handleSshKeyChange = e =>
-    onAdvancedChange(item.id, { ...adv, sshKey: e.target.value });
-
-  const handleIpModeChange = e =>
-    onAdvancedChange(item.id, {
-      ...adv,
-      ipMode: e.target.value,
-      ipAddress: '',
-      subnetMask: adv.subnetMask || '24',
-    });
-
+  const handlePerfSelect = value => onAdvancedChange(item.id, { ...adv, perf: value });
+  const handleMonitorToggle = e => onAdvancedChange(item.id, { ...adv, monitoring: e.target.checked });
+  const handleUsernameChange = e => onAdvancedChange(item.id, { ...adv, username: e.target.value });
+  const handleSshKeyChange = e => onAdvancedChange(item.id, { ...adv, sshKey: e.target.value });
+  const handleIpModeChange = e => onAdvancedChange(item.id, { ...adv, ipMode: e.target.value, ipAddress: '', subnetMask: adv.subnetMask || '24', });
   const handleIpAddressChange = e => {
     const val = e.target.value;
     setLocalIp(val);
-
     const ipv4 = /^(25[0-5]|2[0-4]\d|[01]?\d?\d)(\.(25[0-5]|2[0-4]\d|[01]?\d?\d)){3}$/;
     if (!val) {
       setIpError('IP address is required');
@@ -119,11 +100,31 @@ export default function WhiteboardItem({
       onAdvancedChange(item.id, { ...adv, ipMode: 'static', ipAddress: val });
     }
   };
+  const handleMaskChange = e => onAdvancedChange(item.id, { ...adv, subnetMask: e.target.value });
 
-  const handleMaskChange = e =>
-    onAdvancedChange(item.id, { ...adv, subnetMask: e.target.value });
-
-  // ────────────────────────────────────────────────────────────────────────────
+  // View-only: just show the icon and status
+  if (!isEditable) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          position: 'absolute',
+          left: item.left,
+          top: item.top,
+          width: gridSize,
+          height: gridSize,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 2,
+          borderColor: 'primary.main',
+          zIndex: 10,
+        }}
+      >
+        <Typography variant="h4">{item.icon}</Typography>
+      </Paper>
+    );
+  }
 
   const size = gridSize;
   const baseType = item.id.split('-')[0];

@@ -19,6 +19,7 @@ export default function BoardView({
     onVlanChange,
     onGroupChange,
     onAdvancedChange,
+    isEditable,
 }) {
     // Compute VLAN-group bounding boxes, now including vmPack.group.vlans
     const vlanBounds = vlans
@@ -49,7 +50,7 @@ export default function BoardView({
     return (
         <Box className="flex flex-col flex-grow">
             <Whiteboard
-                onDrop={onDrop}
+                onDrop={isEditable ? onDrop : undefined}
                 gridSize={gridSize}
                 occupiedCells={occupiedCells}
                 className="flex-grow"
@@ -77,16 +78,18 @@ export default function BoardView({
                         roles={rolesMap[item.id.split('-')[0]] || []}
                         availableVlans={vlans}
                         legendItems={legendItems}
-                        onRoleToggle={onRoleToggle}
-                        onVlanChange={onVlanChange}
-                        onGroupChange={onGroupChange}
-                        onContextMenu={e => { e.preventDefault(); onDeleteItem(item.id); }}
+                        onRoleToggle={isEditable ? onRoleToggle : undefined}
+                        onVlanChange={isEditable ? onVlanChange : undefined}
+                        onGroupChange={isEditable ? onGroupChange : undefined}
+                        onContextMenu={isEditable ? (e => { e.preventDefault(); onDeleteItem(item.id); }) : undefined}
                         gridSize={gridSize}
-                        onAdvancedChange={onAdvancedChange}
+                        onAdvancedChange={isEditable ? onAdvancedChange : undefined}
+                        isEditable={isEditable}
                     />
                 ))}
 
-                <DeleteArea onDrop={i => onDeleteItem(i.id)} />
+                {/* Only show DeleteArea if editable */}
+                {isEditable && <DeleteArea onDrop={i => onDeleteItem(i.id)} />}
             </Whiteboard>
         </Box>
     );
