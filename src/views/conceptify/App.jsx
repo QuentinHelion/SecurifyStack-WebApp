@@ -264,12 +264,24 @@ export default function App() {
         setTimeout(() => {
             // TODO: Replace with real validation logic
             const errors = [];
-            const machines = whiteboardItems.map(item => ({
-                id: item.id,
-                name: item.name || item.id,
-                status: 'pending', // 'pending', 'success', 'error', 'loading'
-                info: '',
-            }));
+            // Count machines by type for incremented names
+            const typeCounts = {};
+            const machines = whiteboardItems.map(item => {
+                const baseType = item.id.split('-')[0];
+                typeCounts[baseType] = (typeCounts[baseType] || 0) + 1;
+                let displayName = item.name || item.id;
+                if (baseType === 'linuxServer') displayName = `Linux Server ${typeCounts[baseType]}`;
+                if (baseType === 'windowsServer') displayName = `Windows Server ${typeCounts[baseType]}`;
+                if (baseType === 'windows10') displayName = `Windows 10 ${typeCounts[baseType]}`;
+                if (baseType === 'vmPack') displayName = `VM Pack ${typeCounts[baseType]}`;
+                return {
+                    id: item.id,
+                    name: displayName,
+                    roles: item.roles || [],
+                    status: 'pending', // 'pending', 'success', 'error', 'loading'
+                    info: '',
+                };
+            });
             setMachineList(machines);
             if (whiteboardItems.length === 0) {
                 errors.push('No machines defined.');
@@ -449,7 +461,14 @@ export default function App() {
                                 <ListItemIcon>
                                     <RadioButtonUncheckedIcon color="disabled" />
                                 </ListItemIcon>
-                                <ListItemText primary={machine.name} />
+                                <ListItemText
+                                    primary={machine.name}
+                                    secondary={machine.roles.length > 0 ? (
+                                        <span style={{ fontSize: 13, color: '#666' }}>
+                                            Roles: {machine.roles.join(', ')}
+                                        </span>
+                                    ) : null}
+                                />
                             </ListItem>
                         ))}
                     </List>
