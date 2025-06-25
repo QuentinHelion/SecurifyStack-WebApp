@@ -12,28 +12,14 @@ import FooterActions from './components/FooterActions';
 const legendItems = [
     { id: 'windowsServer', name: 'Windows Server', icon: '🪟' },
     { id: 'windows10', name: 'Windows 10', icon: '💻' },
-    { id: 'windows11', name: 'Windows 11', icon: '🖥️' },
     { id: 'linuxServer', name: 'Linux Server', icon: '🐧' },
-    { id: 'networkSwitch', name: 'Network Switch', icon: '🔌' },
-    { id: 'firewall', name: 'Firewall', icon: '🛡️' },
-    { id: 'router', name: 'Router', icon: '📡' },
-    { id: 'database', name: 'Database', icon: '🗄️' },
-    { id: 'loadBalancer', name: 'Load Balancer', icon: '⚖️' },
-    { id: 'siemWazuh', name: '  Wazuh', icon: '🔍' },
-    { id: 'webServer', name: 'Web Server', icon: '🌐' },
     { id: 'vmPack', name: 'VM Pack', icon: '📁' },
 ];
 
 // Roles per device type
 const roles = {
     windowsServer: ['ADDS', 'DNS', 'DHCP', 'IIS'],
-    linuxServer: ['Web Server', 'Database', 'File Server'],
-    networkSwitch: ['VLAN', 'Port Mirroring', 'QoS'],
-    firewall: ['NAT', 'VPN', 'IPS'],
-    router: ['OSPF', 'BGP', 'MPLS'],
-    database: ['SQL', 'NoSQL', 'In-Memory'],
-    loadBalancer: ['Round Robin', 'Least Connections', 'IP Hash'],
-    webServer: ['Apache', 'Nginx', 'IIS'],
+    linuxServer: ['Web Server', 'Database', 'File Server']
 };
 
 const GRID_SIZE = 50;
@@ -255,16 +241,58 @@ export default function App() {
     return (
         <Box className="conceptify-root" sx={{ height: '100vh', overflow: 'hidden', pb: 2 }}>
             {/* Header Bar */}
-            <Box display="flex" alignItems="center" sx={{ mb: 1, mt: 1, px: 3, height: 44, background: '#f7fafd', borderBottom: '1px solid #e0e0e0' }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: 1, fontSize: 22 }}>
-                    Conceptify
-                </Typography>
+            <Box display="flex" alignItems="center" sx={{ mb: 1, mt: 1, px: 3, height: 44, background: '#f7fafd', borderBottom: '1px solid #e0e0e0', position: 'relative' }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => window.close()}
+                    sx={{
+                        fontWeight: 600,
+                        letterSpacing: 1,
+                        fontSize: 16,
+                        textTransform: 'none',
+                        minWidth: 0,
+                        padding: '4px 20px',
+                        marginBottom: '10px',
+                        boxShadow: 'none',
+                    }}
+                >
+                    Return to Dashboard
+                </Button>
+                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'absolute', left: 0, right: 0, pointerEvents: 'none', zIndex: 0 }}>
+                    <Box
+                        sx={{
+                            display: 'inline-block',
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 2,
+                            background: 'linear-gradient(90deg, #3B82F6 0%, #9333EA 100%)',
+                            color: 'white',
+                            fontWeight: 800,
+                            fontSize: 24,
+                            letterSpacing: 2,
+                            boxShadow: '0 2px 8px 0 rgba(59,130,246,0.15)',
+                            textShadow: '0 2px 8px rgba(59,130,246,0.25)',
+                            fontFamily: 'Montserrat, sans-serif',
+                            textAlign: 'center',
+                            minWidth: '60%',
+                            userSelect: 'none',
+                            pointerEvents: 'auto',
+                            marginBottom: '10px',
+                        }}
+                    >
+                        Conceptify
+                    </Box>
+                </Box>
                 <Box flexGrow={1} />
                 <Button
                     variant="outlined"
                     color="primary"
                     onClick={() => setIsEditable(e => !e)}
-                    sx={{ minWidth: 120 }}
+                    sx={{
+                        minWidth: 120,
+                        marginBottom: '10px',
+                    }}
                 >
                     {isEditable ? 'View Only' : 'Edit Mode'}
                 </Button>
