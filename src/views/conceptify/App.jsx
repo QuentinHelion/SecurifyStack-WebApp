@@ -2,12 +2,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Box, Paper, Typography, Button } from '@mui/material';
+import { Box, Paper, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, List, ListItem, ListItemIcon, ListItemText, IconButton, Alert } from '@mui/material';
 import LegendItem from './components/LegendItem';
 import VlanPanel from './components/VlanPanel';
 import BoardView from './components/BoardView';
 import FooterActions from './components/FooterActions';
 import { useSnackbar } from 'notistack';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 
 // Legend definitions
 const legendItems = [
@@ -53,6 +57,14 @@ export default function App() {
 
     // edit mode
     const [isEditable, setIsEditable] = useState(true);
+
+    // --- Validation & Deploy Modal State ---
+    const [deployModalOpen, setDeployModalOpen] = useState(false);
+    const [validationLoading, setValidationLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
+    const [validationPassed, setValidationPassed] = useState(false);
+    const [machineList, setMachineList] = useState([]);
+    // ---
 
     // load saved state (10-min TTL)
     useEffect(() => {
@@ -243,6 +255,43 @@ export default function App() {
         );
     };
 
+    // --- Validation Logic (placeholder) ---
+    const validateConfig = () => {
+        setValidationLoading(true);
+        setValidationErrors([]);
+        setValidationPassed(false);
+        // Simulate async validation
+        setTimeout(() => {
+            // TODO: Replace with real validation logic
+            const errors = [];
+            const machines = whiteboardItems.map(item => ({
+                id: item.id,
+                name: item.name || item.id,
+                status: 'pending', // 'pending', 'success', 'error', 'loading'
+                info: '',
+            }));
+            setMachineList(machines);
+            if (whiteboardItems.length === 0) {
+                errors.push('No machines defined.');
+            }
+            // Add more validation rules here
+            setValidationErrors(errors);
+            setValidationPassed(errors.length === 0);
+            setValidationLoading(false);
+        }, 1000);
+    };
+
+    const handleOpenDeployModal = () => {
+        setDeployModalOpen(true);
+        validateConfig();
+    };
+    const handleCloseDeployModal = () => {
+        setDeployModalOpen(false);
+        setValidationErrors([]);
+        setValidationPassed(false);
+        setMachineList([]);
+    };
+
     return (
         <Box className="conceptify-root" sx={{ height: '100vh', overflow: 'hidden', pb: 2 }}>
             {/* Header Bar */}
@@ -368,11 +417,50 @@ export default function App() {
                         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ minHeight: 'auto', height: 'auto', py: 1, px: 3 }}>
                             <Button variant="contained" color="primary" onClick={saveWork} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Save Work</Button>
                             <Button variant="contained" color="secondary" onClick={generateConfigFiles} sx={{ minWidth: 180, fontSize: 14, py: 1 }}>Generate Config Files</Button>
+                            <Button variant="contained" color="info" onClick={handleOpenDeployModal} sx={{ minWidth: 180, fontSize: 14, py: 1 }}>Validate & Deploy</Button>
                             <Button variant="outlined" color="error" onClick={handleClearCache} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Clear Cache</Button>
                         </Box>
                     )}
                 </Box>
             </DndProvider>
+            {/* Validation & Deploy Modal */}
+            <Dialog open={deployModalOpen} onClose={handleCloseDeployModal} maxWidth="sm" fullWidth>
+                <DialogTitle>Validate & Deploy</DialogTitle>
+                <DialogContent>
+                    {validationLoading ? (
+                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={4}>
+                            <CircularProgress />
+                            <Typography variant="body1" sx={{ mt: 2 }}>Validating configuration...</Typography>
+                        </Box>
+                    ) : validationErrors.length > 0 ? (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {validationErrors.map((err, idx) => <div key={idx}>{err}</div>)}
+                        </Alert>
+                    ) : validationPassed ? (
+                        <Alert severity="success" sx={{ mb: 2 }}>Configuration is valid!</Alert>
+                    ) : null}
+                    <List>
+                        {machineList.map((machine, idx) => (
+                            <ListItem key={machine.id} secondaryAction={
+                                <IconButton edge="end" aria-label="info">
+                                    <InfoOutlinedIcon />
+                                </IconButton>
+                            }>
+                                <ListItemIcon>
+                                    <RadioButtonUncheckedIcon color="disabled" />
+                                </ListItemIcon>
+                                <ListItemText primary={machine.name} />
+                            </ListItem>
+                        ))}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDeployModal}>Close</Button>
+                    <Button variant="contained" color="success" disabled={!validationPassed}>
+                        Deploy
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
