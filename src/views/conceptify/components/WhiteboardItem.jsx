@@ -65,17 +65,17 @@ export default function WhiteboardItem({
   const monitoring = adv.monitoring ?? true;
   const username = adv.username || '';
   const sshKey = adv.sshKey || '';
-  const ipMode = adv.ipMode || 'dhcp';
-  const ipAddress = adv.ipAddress || '';
-  const subnetMask = adv.subnetMask || '24';
+  const ip_mode = adv.ip_mode || 'dhcp';
+  const ip_address = adv.ip_address || '';
+  const subnet_mask = adv.subnet_mask || '24';
 
-  const [localIp, setLocalIp] = useState(ipAddress);
+  const [localIp, setLocalIp] = useState(ip_address);
   const [ipError, setIpError] = useState('');
 
   useEffect(() => {
-    setLocalIp(ipAddress);
+    setLocalIp(ip_address);
     setIpError('');
-  }, [ipAddress, ipMode]);
+  }, [ip_address, ip_mode]);
 
   // Handlers (unchanged)
   const handleClick = e => setAnchorEl(e.currentTarget);
@@ -86,7 +86,7 @@ export default function WhiteboardItem({
   const handleMonitorToggle = e => onAdvancedChange(item.id, { ...adv, monitoring: e.target.checked });
   const handleUsernameChange = e => onAdvancedChange(item.id, { ...adv, username: e.target.value });
   const handleSshKeyChange = e => onAdvancedChange(item.id, { ...adv, sshKey: e.target.value });
-  const handleIpModeChange = e => onAdvancedChange(item.id, { ...adv, ipMode: e.target.value, ipAddress: '', subnetMask: adv.subnetMask || '24', });
+  const handleIpModeChange = e => onAdvancedChange(item.id, { ...adv, ip_mode: e.target.value, ip_address: '', subnet_mask: adv.subnet_mask || '24' });
   const handleIpAddressChange = e => {
     const val = e.target.value;
     setLocalIp(val);
@@ -97,10 +97,10 @@ export default function WhiteboardItem({
       setIpError('Invalid IPv4 address');
     } else {
       setIpError('');
-      onAdvancedChange(item.id, { ...adv, ipMode: 'static', ipAddress: val });
+      onAdvancedChange(item.id, { ...adv, ip_mode: 'static', ip_address: val });
     }
   };
-  const handleMaskChange = e => onAdvancedChange(item.id, { ...adv, subnetMask: e.target.value });
+  const handleMaskChange = e => onAdvancedChange(item.id, { ...adv, subnet_mask: e.target.value });
 
   // View-only: just show the icon and status
   if (!isEditable) {
@@ -233,18 +233,19 @@ export default function WhiteboardItem({
               <FormControl fullWidth size="small" margin="dense">
                 <InputLabel>OS</InputLabel>
                 <Select
-                  value={item.group?.templateType || ''}
+                  value={item.group?.os_version || ''}
                   label="OS"
                   onChange={e =>
                     onGroupChange(item.id, {
                       ...item.group,
-                      templateType: e.target.value
+                      os_version: e.target.value
                     })
                   }
                 >
-                  <MenuItem value="debian">Debian</MenuItem>
-                  <MenuItem value="ubuntu">Ubuntu</MenuItem>
-                  <MenuItem value="centos">CentOS</MenuItem>
+                  <MenuItem value="ubuntu20.04">Ubuntu 20.04</MenuItem>
+                  <MenuItem value="ubuntu22.04">Ubuntu 22.04</MenuItem>
+                  <MenuItem value="debian11">Debian 11</MenuItem>
+                  <MenuItem value="debian12">Debian 12</MenuItem>
                 </Select>
               </FormControl>
 
@@ -274,12 +275,12 @@ export default function WhiteboardItem({
                 <FormControl fullWidth size="small" margin="dense">
                   <InputLabel>OS Version</InputLabel>
                   <Select
-                    value={item.advanced?.osVersion || ''}
+                    value={item.advanced?.os_version || ''}
                     label="OS Version"
                     onChange={e =>
                       onAdvancedChange(item.id, {
                         ...item.advanced,
-                        osVersion: e.target.value
+                        os_version: e.target.value
                       })
                     }
                   >
@@ -294,12 +295,12 @@ export default function WhiteboardItem({
                 <FormControl fullWidth size="small" margin="dense">
                   <InputLabel>OS Version</InputLabel>
                   <Select
-                    value={item.advanced?.osVersion || ''}
+                    value={item.advanced?.os_version || ''}
                     label="OS Version"
                     onChange={e =>
                       onAdvancedChange(item.id, {
                         ...item.advanced,
-                        osVersion: e.target.value
+                        os_version: e.target.value
                       })
                     }
                   >
@@ -443,12 +444,12 @@ export default function WhiteboardItem({
 
           {/* IP Configuration */}
           <Typography variant="subtitle1" sx={{ mt: 2 }}>IP Configuration</Typography>
-          <RadioGroup row value={ipMode} onChange={handleIpModeChange} sx={{ mb: 1 }}>
+          <RadioGroup row value={ip_mode} onChange={handleIpModeChange} sx={{ mb: 1 }}>
             <FormControlLabel value="dhcp" control={<Radio />} label="DHCP" />
             <FormControlLabel value="static" control={<Radio />} label="Static" />
           </RadioGroup>
 
-          {ipMode === 'static' && (
+          {ip_mode === 'static' && (
             <>
               <Box display="flex" alignItems="center" gap={1} mb={ipError ? 0 : 2}>
                 <TextField
@@ -459,12 +460,13 @@ export default function WhiteboardItem({
                   value={localIp}
                   onChange={handleIpAddressChange}
                   error={!!ipError}
-                  sx={{ flex: 2 }}
+                  helperText={ipError}
+                  fullWidth
                 />
                 <Typography>/</Typography>
                 <FormControl size="small" margin="dense" sx={{ flex: 1 }}>
                   <InputLabel>Mask</InputLabel>
-                  <Select value={subnetMask} label="Mask" onChange={handleMaskChange}>
+                  <Select value={subnet_mask} label="Mask" onChange={handleMaskChange}>
                     {Array.from({ length: 33 }, (_, i) => String(i)).map(m => (
                       <MenuItem key={m} value={m}>{m}</MenuItem>
                     ))}

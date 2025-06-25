@@ -12,6 +12,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import Cookies from 'js-cookie';
 
 // Legend definitions
 const legendItems = [
@@ -36,6 +37,15 @@ const initialVlans = [
     { id: 30, name: 'VLAN 30', color: '#EF4444' },
     { id: 40, name: 'VLAN 40', color: '#10B981' },
 ];
+
+// Utility to strip camelCase keys from advanced before updating
+function toSnakeCaseAdvanced(adv) {
+    const {
+        ipAddress, ipMode, osVersion, subnetMask, // camelCase
+        ...rest
+    } = adv;
+    return rest;
+}
 
 export default function App() {
     // board state
@@ -137,6 +147,7 @@ export default function App() {
                 top: ty,
                 roles: [],
                 vlans: [],
+                advanced: { ip_mode: 'dhcp' },
                 ...(base === 'vmPack'
                     ? { group: { count: '', os: 'Debian', vlans: [] } }
                     : {}
@@ -207,14 +218,10 @@ export default function App() {
                 mon_agent: adv.monitoring ?? true,
                 username: adv.username?.trim() || 'user',
                 sshKey: adv.sshKey?.trim() || '',
-                ip_mode: adv.ipMode ?? 'dhcp',
-                ip_address: adv.ipAddress?.trim() || '',
-                subnet_mask: adv.subnetMask || '',
-                os_version:
-                    adv.osVersion
-                    ?? (type === 'windows10' ? 'Windows 10'
-                        : type === 'windows11' ? 'Windows 11'
-                            : ''),
+                ip_mode: adv.ip_mode ?? 'dhcp',
+                os_version: adv.os_version,
+                ...(adv.ip_mode !== 'dhcp' && adv.ip_address ? { ip_address: adv.ip_address } : {}),
+                ...(adv.ip_mode !== 'dhcp' && adv.subnet_mask ? { subnet_mask: adv.subnet_mask } : {})
             };
 
             const baseEntry = {
@@ -251,48 +258,138 @@ export default function App() {
         setWhiteboardItems(ws =>
             ws.map(i =>
                 i.id === itemId
-                    ? { ...i, advanced }
+                    ? { ...i, advanced: toSnakeCaseAdvanced(advanced) }
                     : i
             )
         );
     };
 
-    // --- Validation Logic (placeholder) ---
-    const validateConfig = () => {
+    // --- Real Validation Logic ---
+    function isValidIP(ip) {
+        // Simple IPv4 validation
+        return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
+    }
+    function isValidVMID(vmid) {
+        return Number.isInteger(vmid) && vmid > 0 && vmid < 10000;
+    }
+    function isNonEmptyString(str) {
+        return typeof str === 'string' && str.trim().length > 0;
+    }
+    function isValidRoles(roles, baseType) {
+        if (!Array.isArray(roles)) return false;
+        if (baseType === 'windowsServer') return roles.every(r => rolesWindowsServer.includes(r));
+        if (baseType === 'linuxServer') return roles.every(r => rolesLinuxServer.includes(r));
+        return true;
+    }
+    const rolesWindowsServer = ['ADDS', 'DNS', 'DHCP', 'IIS'];
+    const rolesLinuxServer = ['Web Server', 'Database', 'File Server'];
+    const osVersionsWindowsServer = ['2016', '2019', '2022'];
+    const osVersionsLinuxServer = ['ubuntu20.04', 'ubuntu22.04', 'debian11', 'debian12'];
+
+    const validateConfig = async () => {
         setValidationLoading(true);
         setValidationErrors([]);
         setValidationPassed(false);
-        // Simulate async validation
-        setTimeout(() => {
-            // TODO: Replace with real validation logic
-            const errors = [];
-            // Count machines by type for incremented names
-            const typeCounts = {};
-            const machines = whiteboardItems.map(item => {
-                const baseType = item.id.split('-')[0];
-                typeCounts[baseType] = (typeCounts[baseType] || 0) + 1;
-                let displayName = item.name || item.id;
-                if (baseType === 'linuxServer') displayName = `Linux Server ${typeCounts[baseType]}`;
-                if (baseType === 'windowsServer') displayName = `Windows Server ${typeCounts[baseType]}`;
-                if (baseType === 'windows10') displayName = `Windows 10 ${typeCounts[baseType]}`;
-                if (baseType === 'vmPack') displayName = `VM Pack ${typeCounts[baseType]}`;
-                return {
-                    id: item.id,
-                    name: displayName,
-                    roles: item.roles || [],
-                    status: 'pending', // 'pending', 'success', 'error', 'loading'
-                    info: '',
-                };
-            });
-            setMachineList(machines);
-            if (whiteboardItems.length === 0) {
-                errors.push('No machines defined.');
+        // --- Real validation ---
+        const errors = [];
+        const vmidSet = new Set();
+        const ipSet = new Set();
+        const typeCounts = {};
+        const machines = whiteboardItems.map((item, idx) => {
+            const baseType = item.id.split('-')[0];
+            typeCounts[baseType] = (typeCounts[baseType] || 0) + 1;
+            let displayName = item.name || item.id;
+            if (baseType === 'linuxServer') displayName = `Linux Server ${typeCounts[baseType]}`;
+            if (baseType === 'windowsServer') displayName = `Windows Server ${typeCounts[baseType]}`;
+            if (baseType === 'windows10') displayName = `Windows 10 ${typeCounts[baseType]}`;
+            if (baseType === 'vmPack') displayName = `VM Pack ${typeCounts[baseType]}`;
+            // --- Validation ---
+            const adv = item.advanced || {};
+            const ipMode = adv.ip_mode || 'dhcp';
+            // VMID
+            let vmid = adv.vmid || (100 + idx);
+            if (!isValidVMID(vmid)) errors.push(`${displayName}: Invalid or missing VMID.`);
+            if (vmidSet.has(vmid)) errors.push(`${displayName}: Duplicate VMID (${vmid}).`);
+            vmidSet.add(vmid);
+            // Name
+            if (!isNonEmptyString(displayName)) errors.push(`${displayName}: Name is required.`);
+            // IP and Subnet Mask
+            if (baseType !== 'vmPack' && ipMode !== 'dhcp') {
+                const ip = adv.ip_address || '';
+                if (!isValidIP(ip)) errors.push(`${displayName}: Invalid or missing IP address.`);
+                if (ipSet.has(ip)) errors.push(`${displayName}: Duplicate IP (${ip}).`);
+                ipSet.add(ip);
+                // Subnet mask (optional, but if present, could validate format here)
             }
-            // Add more validation rules here
+            // OS Version
+            if (baseType === 'windowsServer' && !osVersionsWindowsServer.includes(adv.os_version)) {
+                errors.push(`${displayName}: Invalid or missing Windows Server OS version.`);
+            }
+            if (baseType === 'linuxServer' && !osVersionsLinuxServer.includes(adv.os_version)) {
+                errors.push(`${displayName}: Invalid or missing Linux Server OS version.`);
+            }
+            // Roles
+            if (!isValidRoles(item.roles, baseType)) {
+                errors.push(`${displayName}: Invalid roles selected.`);
+            }
+            // VM Pack count
+            if (baseType === 'vmPack') {
+                const count = item.group?.count;
+                if (!Number.isInteger(count) || count < 1 || count > 10) {
+                    errors.push(`${displayName}: VM Pack count must be 1-10.`);
+                }
+                const os = item.group?.os_version || item.group?.os;
+                if (!os || !osVersionsLinuxServer.includes(os)) {
+                    errors.push(`${displayName}: VM Pack must have a valid OS version.`);
+                }
+            }
+            return {
+                id: item.id,
+                name: displayName,
+                roles: item.roles || [],
+                status: 'pending',
+                info: '',
+                advanced: adv,
+                group: item.group,
+                baseType,
+                vlans: item.vlans || [],
+            };
+        });
+        setMachineList(machines);
+        if (whiteboardItems.length === 0) {
+            errors.push('No machines defined.');
+        }
+        if (errors.length > 0) {
             setValidationErrors(errors);
-            setValidationPassed(errors.length === 0);
+            setValidationPassed(false);
             setValidationLoading(false);
-        }, 1000);
+            return;
+        }
+        // --- Backend validation ---
+        try {
+            const token = Cookies.get('token');
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/validate-config`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ machines }),
+            });
+            const data = await res.json();
+            if (!data.valid) {
+                setValidationErrors(data.errors || ['Backend validation failed.']);
+                setValidationPassed(false);
+            } else {
+                setValidationErrors([]);
+                setValidationPassed(true);
+            }
+        } catch (err) {
+            setValidationErrors(['Could not reach backend for validation.']);
+            setValidationPassed(false);
+        }
+        setValidationLoading(false);
     };
 
     const handleOpenDeployModal = () => {
@@ -306,19 +403,72 @@ export default function App() {
         setMachineList([]);
     };
 
-    // Simulate async deploy for each machine
-    const deployMachine = (machine, idx) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Simulate random success/failure
-                const isSuccess = Math.random() > 0.2;
-                resolve({
+    // Real deploy for each machine
+    const deployMachine = async (machine, idx) => {
+        // Map machine to backend payload
+        // This is a basic example, adjust as needed for your backend
+        let payload = {};
+        let caseType = '';
+        const baseType = machine.id.split('-')[0];
+        if (baseType === 'linuxServer' || baseType === 'windowsServer' || baseType === 'windows10') {
+            caseType = 'Deploy-1';
+            payload = {
+                case: caseType,
+                clone: baseType === 'linuxServer' ? 'cloudinit-linux-template' : (baseType === 'windowsServer' ? 'win2019-template' : 'win10-template'),
+                vm_name: machine.name,
+                vm_id: 100 + idx, // Example VMID, adjust as needed
+                ip: machine.advanced?.ip_address || '',
+                gw: '192.168.1.1', // Example gateway, adjust as needed
+                network_bridge: 'vmbr0', // Example bridge, adjust as needed
+                network_tag: 10, // Example VLAN/tag, adjust as needed
+                // Add more fields as needed
+            };
+        } else if (baseType === 'vmPack') {
+            caseType = 'Deploy-any-count';
+            payload = {
+                case: caseType,
+                base_name: machine.name,
+                vm_count: machine.group?.count || 1,
+                start_vmid: 200 + idx * 10, // Example start VMID
+                start_ip: '192.168.1.100', // Example start IP
+                gw: '192.168.1.1',
+                network_bridge: 'vmbr0',
+                network_tag: 10,
+                // Add more fields as needed
+            };
+        }
+        try {
+            const token = Cookies.get('token');
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/run-terraform`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (response.ok && !data.error) {
+                return {
                     ...machine,
-                    status: isSuccess ? 'success' : 'error',
-                    info: isSuccess ? 'Machine created successfully.' : 'Error: Terraform failed.'
-                });
-            }, 1500 + Math.random() * 1000);
-        });
+                    status: 'success',
+                    info: data.output || 'Machine created successfully.'
+                };
+            } else {
+                return {
+                    ...machine,
+                    status: 'error',
+                    info: data.error || 'Error: Terraform failed.'
+                };
+            }
+        } catch (err) {
+            return {
+                ...machine,
+                status: 'error',
+                info: err.message || 'Network error.'
+            };
+        }
     };
 
     const handleDeploy = async () => {
@@ -503,11 +653,17 @@ export default function App() {
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={machine.name}
-                                        secondary={machine.roles.length > 0 ? (
-                                            <span style={{ fontSize: 13, color: '#666' }}>
-                                                Roles: {machine.roles.join(', ')}
-                                            </span>
-                                        ) : null}
+                                        secondary={(() => {
+                                            const roles = machine.roles && machine.roles.length > 0 ? `Roles: ${machine.roles.join(', ')}` : '';
+                                            const vlans = machine.vlans && machine.vlans.length > 0 ? `VLANs: ${machine.vlans.join(', ')}` : '';
+                                            let os = '';
+                                            if (machine.baseType === 'vmPack') {
+                                                os = machine.group?.os_version ? `OS: ${machine.group.os_version}` : '';
+                                            } else {
+                                                os = machine.advanced?.os_version ? `OS: ${machine.advanced.os_version}` : '';
+                                            }
+                                            return [roles, vlans, os].filter(Boolean).join(' | ');
+                                        })()}
                                     />
                                 </ListItem>
                                 {expandedInfoIdx === idx && (
