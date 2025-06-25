@@ -64,6 +64,8 @@ export default function App() {
     const [validationErrors, setValidationErrors] = useState([]);
     const [validationPassed, setValidationPassed] = useState(false);
     const [machineList, setMachineList] = useState([]);
+    const [deploying, setDeploying] = useState(false);
+    const [expandedInfoIdx, setExpandedInfoIdx] = useState(null);
     // ---
 
     // load saved state (10-min TTL)
@@ -304,6 +306,35 @@ export default function App() {
         setMachineList([]);
     };
 
+    // Simulate async deploy for each machine
+    const deployMachine = (machine, idx) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // Simulate random success/failure
+                const isSuccess = Math.random() > 0.2;
+                resolve({
+                    ...machine,
+                    status: isSuccess ? 'success' : 'error',
+                    info: isSuccess ? 'Machine created successfully.' : 'Error: Terraform failed.'
+                });
+            }, 1500 + Math.random() * 1000);
+        });
+    };
+
+    const handleDeploy = async () => {
+        setDeploying(true);
+        let newList = [...machineList];
+        for (let i = 0; i < newList.length; i++) {
+            newList[i].status = 'loading';
+            setMachineList([...newList]);
+            // TODO: Replace with real API call
+            const result = await deployMachine(newList[i], i);
+            newList[i] = result;
+            setMachineList([...newList]);
+        }
+        setDeploying(false);
+    };
+
     return (
         <Box className="conceptify-root" sx={{ height: '100vh', overflow: 'hidden', pb: 2 }}>
             {/* Header Bar */}
@@ -453,30 +484,47 @@ export default function App() {
                     ) : null}
                     <List>
                         {machineList.map((machine, idx) => (
-                            <ListItem key={machine.id} secondaryAction={
-                                <IconButton edge="end" aria-label="info">
-                                    <InfoOutlinedIcon />
-                                </IconButton>
-                            }>
-                                <ListItemIcon>
-                                    <RadioButtonUncheckedIcon color="disabled" />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={machine.name}
-                                    secondary={machine.roles.length > 0 ? (
-                                        <span style={{ fontSize: 13, color: '#666' }}>
-                                            Roles: {machine.roles.join(', ')}
-                                        </span>
-                                    ) : null}
-                                />
-                            </ListItem>
+                            <React.Fragment key={machine.id}>
+                                <ListItem secondaryAction={
+                                    <IconButton edge="end" aria-label="info" onClick={() => setExpandedInfoIdx(expandedInfoIdx === idx ? null : idx)}>
+                                        <InfoOutlinedIcon />
+                                    </IconButton>
+                                }>
+                                    <ListItemIcon>
+                                        {machine.status === 'loading' ? (
+                                            <CircularProgress size={24} />
+                                        ) : machine.status === 'success' ? (
+                                            <CheckCircleIcon color="success" />
+                                        ) : machine.status === 'error' ? (
+                                            <CancelIcon color="error" />
+                                        ) : (
+                                            <RadioButtonUncheckedIcon color="disabled" />
+                                        )}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={machine.name}
+                                        secondary={machine.roles.length > 0 ? (
+                                            <span style={{ fontSize: 13, color: '#666' }}>
+                                                Roles: {machine.roles.join(', ')}
+                                            </span>
+                                        ) : null}
+                                    />
+                                </ListItem>
+                                {expandedInfoIdx === idx && (
+                                    <Box sx={{ ml: 7, mb: 1, p: 1, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: 14 }}>
+                                        {machine.status === 'loading' && 'Creating machine...'}
+                                        {machine.status === 'success' && machine.info}
+                                        {machine.status === 'error' && machine.info}
+                                    </Box>
+                                )}
+                            </React.Fragment>
                         ))}
                     </List>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeployModal}>Close</Button>
-                    <Button variant="contained" color="success" disabled={!validationPassed}>
-                        Deploy
+                    <Button onClick={handleCloseDeployModal} disabled={deploying}>Close</Button>
+                    <Button variant="contained" color="success" disabled={!validationPassed || deploying} onClick={handleDeploy}>
+                        {deploying ? 'Deploying...' : 'Deploy'}
                     </Button>
                 </DialogActions>
             </Dialog>
