@@ -121,7 +121,24 @@ export default function WhiteboardItem({
           zIndex: 10,
         }}
       >
-        <Typography variant="h4">{item.icon}</Typography>
+        <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
+          {item.icon}
+          <span
+            title="Status: Unknown"
+            style={{
+              position: 'absolute',
+              top: 2,
+              right: -2,
+              width: 14,
+              height: 14,
+              background: '#bdbdbd', // default gray
+              borderRadius: '50%',
+              border: '2px solid white',
+              display: 'inline-block',
+              zIndex: 1,
+            }}
+          />
+        </Typography>
       </Paper>
     );
   }
@@ -152,7 +169,24 @@ export default function WhiteboardItem({
           zIndex: 10,
         }}
       >
-        <Typography variant="h4">{item.icon}</Typography>
+        <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
+          {item.icon}
+          <span
+            title="Status: Unknown"
+            style={{
+              position: 'absolute',
+              top: 2,
+              right: -2,
+              width: 14,
+              height: 14,
+              background: '#bdbdbd', // default gray
+              borderRadius: '50%',
+              border: '2px solid white',
+              display: 'inline-block',
+              zIndex: 1,
+            }}
+          />
+        </Typography>
       </Paper>
 
       {/* Roles & VLAN Popover */}
@@ -249,7 +283,6 @@ export default function WhiteboardItem({
                       })
                     }
                   >
-                    <MenuItem value="2016">Windows Server 2016</MenuItem>
                     <MenuItem value="2019">Windows Server 2019</MenuItem>
                     <MenuItem value="2022">Windows Server 2022</MenuItem>
                   </Select>

@@ -16,7 +16,7 @@ function LegendItem({ id, name, icon }) {
     <Paper
       ref={drag}
       elevation={2}
-      className={`p-2 mb-2 cursor-move flex items-center ${isDragging ? 'opacity-50' : ''}`}
+      className={`p-2 mb-2 cursor-move flex items-center relative ${isDragging ? 'opacity-50' : ''}`}
     >
       <span className="text-2xl mr-2">{icon}</span>
       <span>{name}</span>

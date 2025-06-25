@@ -7,6 +7,7 @@ import LegendItem from './components/LegendItem';
 import VlanPanel from './components/VlanPanel';
 import BoardView from './components/BoardView';
 import FooterActions from './components/FooterActions';
+import { useSnackbar } from 'notistack';
 
 // Legend definitions
 const legendItems = [
@@ -44,7 +45,7 @@ export default function App() {
     const [newVlanColor, setNewVlanColor] = useState('#ffffff');
 
     // save/snackbar
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const { enqueueSnackbar } = useSnackbar();
     const expirationTimeout = useRef(null);
 
     // ID counters for legend items
@@ -161,7 +162,11 @@ export default function App() {
     const saveWork = () => {
         const payload = { timestamp: Date.now(), whiteboardItems, vlans };
         localStorage.setItem('conceptify-state', JSON.stringify(payload));
-        setSnackbarOpen(true);
+        enqueueSnackbar('Work saved!', {
+            variant: 'success',
+            anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            autoHideDuration: 2000,
+        });
         clearTimeout(expirationTimeout.current);
         expirationTimeout.current = setTimeout(() => {
             localStorage.removeItem('conceptify-state');
