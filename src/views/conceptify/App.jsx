@@ -49,6 +49,20 @@ function toSnakeCaseAdvanced(adv) {
     return rest;
 }
 
+const VM_OS_OPTIONS = [
+    { value: 'debian-12.4.0-amd64-netinst.iso', label: 'Debian 12.4 (VM ISO)' },
+    { value: 'debian-12.5.0-amd64-netinst.iso', label: 'Debian 12.5 (VM ISO)' },
+    { value: 'noble-server-cloudimg-amd64.img', label: 'Ubuntu 24.04 Cloud (VM Cloud-Init)' },
+    { value: 'ubuntu-24.04-desktop-amd64.iso', label: 'Ubuntu 24.04 Desktop (VM ISO)' },
+];
+const CT_OS_OPTIONS = [
+    { value: 'debian-12-standard_12.2-1_amd64.tar.zst', label: 'Debian 12.2 (CT Template)' },
+    { value: 'ubuntu-20.04-standard_20.04-1_amd64.tar.gz', label: 'Ubuntu 20.04 (CT Template)' },
+    { value: 'ubuntu-24.04-standard_24.04-2_amd64.tar.zst', label: 'Ubuntu 24.04 (CT Template)' },
+];
+
+export { VM_OS_OPTIONS, CT_OS_OPTIONS };
+
 export default function App() {
     // board state
     const [whiteboardItems, setWhiteboardItems] = useState([]);
@@ -287,7 +301,6 @@ export default function App() {
     const rolesWindowsServer = ['ADDS', 'DNS', 'DHCP', 'IIS'];
     const rolesLinuxServer = ['Web Server', 'Database', 'File Server'];
     const osVersionsWindowsServer = ['2016', '2019', '2022'];
-    const osVersionsLinuxServer = ['debian12.4', 'debian12.5', 'ubuntu24.04-desktop', 'ubuntu24.04-cloud'];
 
     const validateConfig = async () => {
         setValidationLoading(true);
@@ -340,8 +353,12 @@ export default function App() {
 
                 if (!osLinux) {
                     errors.push(`${displayName}: Please select an OS version.`);
-                } else if (!osVersionsLinuxServer.includes(osLinux)) {
-                    errors.push(`${displayName}: Invalid OS version selected.`);
+                } else {
+                    const validList = typeLinux === 'vm' ? VM_OS_OPTIONS.map(opt => opt.value) : typeLinux === 'ct' ? CT_OS_OPTIONS.map(opt => opt.value) : [];
+
+                    if (!validList.includes(osLinux)) {
+                        errors.push(`${displayName}: Invalid OS version selected.`);
+                    }
                 }
             }
             // Roles
@@ -355,12 +372,17 @@ export default function App() {
                     errors.push(`${displayName}: VM Pack count must be 1-10.`);
                 }
                 const osPack = item.group?.os_version;
-                if (!osPack || !osVersionsLinuxServer.includes(osPack)) {
-                    errors.push(`${displayName}: VM Pack must have a valid OS version.`);
-                }
                 const typePack = item.group?.type;
                 if (!typePack || (typePack !== 'vm' && typePack !== 'ct')) {
                     errors.push(`${displayName}: VM Pack must have a valid type (VM or CT).`);
+                }
+                if (!osPack) {
+                    errors.push(`${displayName}: VM Pack must have a valid OS version.`);
+                } else {
+                    const validList = typePack === 'vm' ? VM_OS_OPTIONS.map(opt => opt.value) : typePack === 'ct' ? CT_OS_OPTIONS.map(opt => opt.value) : [];
+                    if (!validList.includes(osPack)) {
+                        errors.push(`${displayName}: VM Pack must have a valid OS version.`);
+                    }
                 }
             }
             return {
@@ -375,10 +397,7 @@ export default function App() {
                 vlans: item.vlans || [],
             };
         });
-        console.log('VALIDATING MACHINES:', machines);
         setMachineList(machines);
-        // After all error pushes, log the final errors array
-        console.log('FINAL VALIDATION ERRORS:', errors);
         if (whiteboardItems.length === 0) {
             errors.push('No machines defined.');
         }
@@ -395,12 +414,14 @@ export default function App() {
                 'Content-Type': 'application/json',
             };
             if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const res = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/validate-config`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ machines }),
             });
             const data = await res.json();
+
             if (!data.valid) {
                 setValidationErrors(data.errors || ['Backend validation failed.']);
                 setValidationPassed(false);
@@ -429,7 +450,6 @@ export default function App() {
     // Real deploy for each machine
     const deployMachine = async (machine, idx) => {
         // Map machine to backend payload
-        // This is a basic example, adjust as needed for your backend
         let payload = {};
         let caseType = '';
         const baseType = machine.id.split('-')[0];
@@ -437,23 +457,26 @@ export default function App() {
             caseType = 'Deploy-1';
             payload = {
                 case: caseType,
-                clone: baseType === 'linuxServer' ? 'cloudinit-linux-template' : (baseType === 'windowsServer' ? 'win2019-template' : 'win10-template'),
+                clone: baseType === 'linuxServer'
+                    ? machine.advanced?.os_version // Use selected ISO/template filename
+                    : (baseType === 'windowsServer' ? 'win2019-template' : 'win10-template'),
                 vm_name: machine.name,
                 vm_id: 100 + idx, // Example VMID, adjust as needed
                 ip: machine.advanced?.ip_address || '',
-                gw: '192.168.1.1', // Example gateway, adjust as needed
-                network_bridge: 'vmbr0', // Example bridge, adjust as needed
-                network_tag: 10, // Example VLAN/tag, adjust as needed
+                gw: '192.168.1.1',
+                network_bridge: 'vmbr0',
+                network_tag: 10,
                 // Add more fields as needed
             };
         } else if (baseType === 'vmPack') {
             caseType = 'Deploy-any-count';
             payload = {
                 case: caseType,
+                clone: machine.group?.os_version, // Use selected ISO/template filename
                 base_name: machine.name,
                 vm_count: machine.group?.count || 1,
-                start_vmid: 200 + idx * 10, // Example start VMID
-                start_ip: '192.168.1.100', // Example start IP
+                start_vmid: 200 + idx * 10,
+                start_ip: '192.168.1.100',
                 gw: '192.168.1.1',
                 network_bridge: 'vmbr0',
                 network_tag: 10,
@@ -650,7 +673,6 @@ export default function App() {
             <Dialog
                 key={deployModalOpen ? 'open' : 'closed'}
                 open={deployModalOpen}
-                onClose={handleCloseDeployModal}
                 maxWidth="sm"
                 fullWidth
                 aria-labelledby="validate-deploy-title"
@@ -660,19 +682,6 @@ export default function App() {
                     sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 22, pb: 1 }}
                 >
                     Validate & Deploy
-                    <IconButton
-                        aria-label="close"
-                        onClick={handleCloseDeployModal}
-                        sx={{
-                            position: 'absolute',
-                            right: 8,
-                            top: 8,
-                            color: (theme) => theme.palette.grey[500],
-                        }}
-                        size="large"
-                    >
-                        <CancelIcon />
-                    </IconButton>
                 </DialogTitle>
                 <DialogContent sx={{ p: 0 }}>
                     {/* Validation Status Banner */}

@@ -24,6 +24,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
+import { VM_OS_OPTIONS, CT_OS_OPTIONS } from '../App';
 
 const Transition = forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -71,6 +72,9 @@ export default function WhiteboardItem({
 
   const [localIp, setLocalIp] = useState(ip_address);
   const [ipError, setIpError] = useState('');
+
+  const linuxOsOptions = adv.type === 'vm' ? VM_OS_OPTIONS : adv.type === 'ct' ? CT_OS_OPTIONS : [];
+  const vmPackOsOptions = item.group?.type === 'vm' ? VM_OS_OPTIONS : item.group?.type === 'ct' ? CT_OS_OPTIONS : [];
 
   useEffect(() => {
     setLocalIp(ip_address);
@@ -245,10 +249,9 @@ export default function WhiteboardItem({
                       })
                     }
                   >
-                    <MenuItem value="debian12.4">Debian 12.4</MenuItem>
-                    <MenuItem value="debian12.5">Debian 12.5</MenuItem>
-                    <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
-                    <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
+                    {vmPackOsOptions.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               )}
@@ -310,10 +313,9 @@ export default function WhiteboardItem({
                         label="OS Version"
                         onChange={e => onAdvancedChange(item.id, { ...adv, os_version: e.target.value })}
                       >
-                        <MenuItem value="debian12.4">Debian 12.4</MenuItem>
-                        <MenuItem value="debian12.5">Debian 12.5</MenuItem>
-                        <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
-                        <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
+                        {linuxOsOptions.map(opt => (
+                          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   )}
