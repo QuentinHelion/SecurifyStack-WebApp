@@ -40,10 +40,12 @@ const initialVlans = [
 
 // Utility to strip camelCase keys from advanced before updating
 function toSnakeCaseAdvanced(adv) {
+    // Only remove camelCase keys, preserve all snake_case keys
     const {
-        ipAddress, ipMode, osVersion, subnetMask, // camelCase
+        ipAddress, ipMode, osVersion, subnetMask, // camelCase only
         ...rest
     } = adv;
+    // Explicitly preserve os_version and all snake_case fields
     return rest;
 }
 
@@ -220,6 +222,7 @@ export default function App() {
                 sshKey: adv.sshKey?.trim() || '',
                 ip_mode: adv.ip_mode ?? 'dhcp',
                 os_version: adv.os_version,
+                type: adv.type,
                 ...(adv.ip_mode !== 'dhcp' && adv.ip_address ? { ip_address: adv.ip_address } : {}),
                 ...(adv.ip_mode !== 'dhcp' && adv.subnet_mask ? { subnet_mask: adv.subnet_mask } : {})
             };
@@ -258,7 +261,7 @@ export default function App() {
         setWhiteboardItems(ws =>
             ws.map(i =>
                 i.id === itemId
-                    ? { ...i, advanced: toSnakeCaseAdvanced(advanced) }
+                    ? { ...i, advanced: { ...i.advanced, ...toSnakeCaseAdvanced(advanced) } }
                     : i
             )
         );
@@ -284,7 +287,7 @@ export default function App() {
     const rolesWindowsServer = ['ADDS', 'DNS', 'DHCP', 'IIS'];
     const rolesLinuxServer = ['Web Server', 'Database', 'File Server'];
     const osVersionsWindowsServer = ['2016', '2019', '2022'];
-    const osVersionsLinuxServer = ['ubuntu20.04', 'ubuntu22.04', 'debian11', 'debian12'];
+    const osVersionsLinuxServer = ['debian12.4', 'debian12.5', 'ubuntu24.04-desktop', 'ubuntu24.04-cloud'];
 
     const validateConfig = async () => {
         setValidationLoading(true);
@@ -325,8 +328,21 @@ export default function App() {
             if (baseType === 'windowsServer' && !osVersionsWindowsServer.includes(adv.os_version)) {
                 errors.push(`${displayName}: Invalid or missing Windows Server OS version.`);
             }
-            if (baseType === 'linuxServer' && !osVersionsLinuxServer.includes(adv.os_version)) {
-                errors.push(`${displayName}: Invalid or missing Linux Server OS version.`);
+            if (baseType === 'linuxServer') {
+                const osLinux = adv.os_version;
+                const typeLinux = adv.type;
+
+                if (!typeLinux) {
+                    errors.push(`${displayName}: Please select a type (VM or CT).`);
+                } else if (typeLinux !== 'vm' && typeLinux !== 'ct') {
+                    errors.push(`${displayName}: Type must be either VM or CT.`);
+                }
+
+                if (!osLinux) {
+                    errors.push(`${displayName}: Please select an OS version.`);
+                } else if (!osVersionsLinuxServer.includes(osLinux)) {
+                    errors.push(`${displayName}: Invalid OS version selected.`);
+                }
             }
             // Roles
             if (!isValidRoles(item.roles, baseType)) {
@@ -338,9 +354,13 @@ export default function App() {
                 if (!Number.isInteger(count) || count < 1 || count > 10) {
                     errors.push(`${displayName}: VM Pack count must be 1-10.`);
                 }
-                const os = item.group?.os_version || item.group?.os;
-                if (!os || !osVersionsLinuxServer.includes(os)) {
+                const osPack = item.group?.os_version;
+                if (!osPack || !osVersionsLinuxServer.includes(osPack)) {
                     errors.push(`${displayName}: VM Pack must have a valid OS version.`);
+                }
+                const typePack = item.group?.type;
+                if (!typePack || (typePack !== 'vm' && typePack !== 'ct')) {
+                    errors.push(`${displayName}: VM Pack must have a valid type (VM or CT).`);
                 }
             }
             return {
@@ -355,7 +375,10 @@ export default function App() {
                 vlans: item.vlans || [],
             };
         });
+        console.log('VALIDATING MACHINES:', machines);
         setMachineList(machines);
+        // After all error pushes, log the final errors array
+        console.log('FINAL VALIDATION ERRORS:', errors);
         if (whiteboardItems.length === 0) {
             errors.push('No machines defined.');
         }
@@ -393,8 +416,8 @@ export default function App() {
     };
 
     const handleOpenDeployModal = () => {
+        setValidationErrors([]);
         setDeployModalOpen(true);
-        validateConfig();
     };
     const handleCloseDeployModal = () => {
         setDeployModalOpen(false);
@@ -438,7 +461,7 @@ export default function App() {
             };
         }
         try {
-            const token = Cookies.get('token');
+            const token = Cookies.cookies.get('token');
             const headers = {
                 'Content-Type': 'application/json',
             };
@@ -484,6 +507,13 @@ export default function App() {
         }
         setDeploying(false);
     };
+
+    // Add useEffect to trigger validation when modal opens
+    useEffect(() => {
+        if (deployModalOpen) {
+            validateConfig();
+        }
+    }, [deployModalOpen, whiteboardItems]);
 
     return (
         <Box className="conceptify-root" sx={{ height: '100vh', overflow: 'hidden', pb: 2 }}>
@@ -617,7 +647,13 @@ export default function App() {
                 </Box>
             </DndProvider>
             {/* Validation & Deploy Modal */}
-            <Dialog open={deployModalOpen} onClose={handleCloseDeployModal} maxWidth="sm" fullWidth>
+            <Dialog
+                key={deployModalOpen ? 'open' : 'closed'}
+                open={deployModalOpen}
+                onClose={handleCloseDeployModal}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>Validate & Deploy</DialogTitle>
                 <DialogContent>
                     {validationLoading ? (

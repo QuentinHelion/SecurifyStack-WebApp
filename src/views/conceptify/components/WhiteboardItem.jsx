@@ -210,7 +210,6 @@ export default function WhiteboardItem({
               <Typography variant="subtitle1" gutterBottom>
                 Pack de VMs
               </Typography>
-
               {/* Nombre de VMs */}
               <TextField
                 label="Nombre"
@@ -228,8 +227,11 @@ export default function WhiteboardItem({
                   });
                 }}
               />
-
-              {/* Sélection OS */}
+              <Typography variant="subtitle1" sx={{ mt: 1 }}>Type</Typography>
+              <RadioGroup row value={item.group?.type || 'vm'} onChange={e => onGroupChange(item.id, { ...item.group, type: e.target.value })}>
+                <FormControlLabel value="vm" control={<Radio />} label="VM" />
+                <FormControlLabel value="ct" control={<Radio />} label="CT" />
+              </RadioGroup>
               <FormControl fullWidth size="small" margin="dense">
                 <InputLabel>OS</InputLabel>
                 <Select
@@ -242,10 +244,10 @@ export default function WhiteboardItem({
                     })
                   }
                 >
-                  <MenuItem value="ubuntu20.04">Ubuntu 20.04</MenuItem>
-                  <MenuItem value="ubuntu22.04">Ubuntu 22.04</MenuItem>
-                  <MenuItem value="debian11">Debian 11</MenuItem>
-                  <MenuItem value="debian12">Debian 12</MenuItem>
+                  <MenuItem value="debian12.4">Debian 12.4</MenuItem>
+                  <MenuItem value="debian12.5">Debian 12.5</MenuItem>
+                  <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
+                  <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
                 </Select>
               </FormControl>
 
@@ -292,24 +294,26 @@ export default function WhiteboardItem({
 
               {/* ─── Linux Server OS Version ──────────────────────────────── */}
               {baseType === 'linuxServer' && (
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>OS Version</InputLabel>
-                  <Select
-                    value={item.advanced?.os_version || ''}
-                    label="OS Version"
-                    onChange={e =>
-                      onAdvancedChange(item.id, {
-                        ...item.advanced,
-                        os_version: e.target.value
-                      })
-                    }
-                  >
-                    <MenuItem value="ubuntu20.04">Ubuntu 20.04</MenuItem>
-                    <MenuItem value="ubuntu22.04">Ubuntu 22.04</MenuItem>
-                    <MenuItem value="debian11">Debian 11</MenuItem>
-                    <MenuItem value="debian12">Debian 12</MenuItem>
-                  </Select>
-                </FormControl>
+                <>
+                  <Typography variant="subtitle1" sx={{ mt: 1 }}>Type</Typography>
+                  <RadioGroup row value={adv.type || ''} onChange={e => onAdvancedChange(item.id, { ...adv, type: e.target.value })}>
+                    <FormControlLabel value="vm" control={<Radio />} label="VM" />
+                    <FormControlLabel value="ct" control={<Radio />} label="CT" />
+                  </RadioGroup>
+                  <FormControl fullWidth size="small" margin="dense">
+                    <InputLabel>OS Version</InputLabel>
+                    <Select
+                      value={adv.os_version || ''}
+                      label="OS Version"
+                      onChange={e => onAdvancedChange(item.id, { ...adv, os_version: e.target.value })}
+                    >
+                      <MenuItem value="debian12.4">Debian 12.4</MenuItem>
+                      <MenuItem value="debian12.5">Debian 12.5</MenuItem>
+                      <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
+                      <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
+                    </Select>
+                  </FormControl>
+                </>
               )}
 
               {/* 2) Roles (ne pas afficher "Roles" pour Win 10/11) */}
