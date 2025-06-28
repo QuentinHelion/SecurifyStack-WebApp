@@ -232,24 +232,26 @@ export default function WhiteboardItem({
                 <FormControlLabel value="vm" control={<Radio />} label="VM" />
                 <FormControlLabel value="ct" control={<Radio />} label="CT" />
               </RadioGroup>
-              <FormControl fullWidth size="small" margin="dense">
-                <InputLabel>OS</InputLabel>
-                <Select
-                  value={item.group?.os_version || ''}
-                  label="OS"
-                  onChange={e =>
-                    onGroupChange(item.id, {
-                      ...item.group,
-                      os_version: e.target.value
-                    })
-                  }
-                >
-                  <MenuItem value="debian12.4">Debian 12.4</MenuItem>
-                  <MenuItem value="debian12.5">Debian 12.5</MenuItem>
-                  <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
-                  <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
-                </Select>
-              </FormControl>
+              {item.group?.type && (
+                <FormControl fullWidth size="small" margin="dense">
+                  <InputLabel>OS</InputLabel>
+                  <Select
+                    value={item.group?.os_version || ''}
+                    label="OS"
+                    onChange={e =>
+                      onGroupChange(item.id, {
+                        ...item.group,
+                        os_version: e.target.value
+                      })
+                    }
+                  >
+                    <MenuItem value="debian12.4">Debian 12.4</MenuItem>
+                    <MenuItem value="debian12.5">Debian 12.5</MenuItem>
+                    <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
+                    <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
 
               {/* VLANs partagés */}
               <FormControl fullWidth size="small" margin="dense">
@@ -300,19 +302,21 @@ export default function WhiteboardItem({
                     <FormControlLabel value="vm" control={<Radio />} label="VM" />
                     <FormControlLabel value="ct" control={<Radio />} label="CT" />
                   </RadioGroup>
-                  <FormControl fullWidth size="small" margin="dense">
-                    <InputLabel>OS Version</InputLabel>
-                    <Select
-                      value={adv.os_version || ''}
-                      label="OS Version"
-                      onChange={e => onAdvancedChange(item.id, { ...adv, os_version: e.target.value })}
-                    >
-                      <MenuItem value="debian12.4">Debian 12.4</MenuItem>
-                      <MenuItem value="debian12.5">Debian 12.5</MenuItem>
-                      <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
-                      <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
-                    </Select>
-                  </FormControl>
+                  {adv.type && (
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>OS Version</InputLabel>
+                      <Select
+                        value={adv.os_version || ''}
+                        label="OS Version"
+                        onChange={e => onAdvancedChange(item.id, { ...adv, os_version: e.target.value })}
+                      >
+                        <MenuItem value="debian12.4">Debian 12.4</MenuItem>
+                        <MenuItem value="debian12.5">Debian 12.5</MenuItem>
+                        <MenuItem value="ubuntu24.04-desktop">Ubuntu 24.04 Desktop</MenuItem>
+                        <MenuItem value="ubuntu24.04-cloud">Ubuntu 24.04 Cloud</MenuItem>
+                      </Select>
+                    </FormControl>
+                  )}
                 </>
               )}
 
