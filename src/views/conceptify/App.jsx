@@ -653,70 +653,155 @@ export default function App() {
                 onClose={handleCloseDeployModal}
                 maxWidth="sm"
                 fullWidth
+                aria-labelledby="validate-deploy-title"
             >
-                <DialogTitle>Validate & Deploy</DialogTitle>
-                <DialogContent>
-                    {validationLoading ? (
-                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={4}>
-                            <CircularProgress />
-                            <Typography variant="body1" sx={{ mt: 2 }}>Validating configuration...</Typography>
+                <DialogTitle
+                    id="validate-deploy-title"
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 22, pb: 1 }}
+                >
+                    Validate & Deploy
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleCloseDeployModal}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: (theme) => theme.palette.grey[500],
+                        }}
+                        size="large"
+                    >
+                        <CancelIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ p: 0 }}>
+                    {/* Validation Status Banner */}
+                    <Box sx={{ px: 3, pt: 3, pb: 2 }}>
+                        {validationLoading ? (
+                            <Alert severity="info" icon={<CircularProgress size={20} sx={{ mr: 1 }} />} sx={{ mb: 2, fontSize: 16 }}>
+                                Validating configuration...
+                            </Alert>
+                        ) : validationErrors.length > 0 ? (
+                            <Alert severity="error" icon={<CancelIcon />} sx={{ mb: 2, fontSize: 16 }}>
+                                Validation failed. Please fix the errors below.
+                            </Alert>
+                        ) : validationPassed ? (
+                            <Alert severity="success" icon={<CheckCircleIcon />} sx={{ mb: 2, fontSize: 16 }}>
+                                Configuration is valid! Ready to deploy.
+                            </Alert>
+                        ) : null}
+                    </Box>
+
+                    {/* Error List Section */}
+                    {validationErrors.length > 0 && (
+                        <Box sx={{ px: 3, pb: 2 }}>
+                            <Typography variant="subtitle1" color="error" sx={{ mb: 1 }}>
+                                {validationErrors.length === 1 ? '1 Error:' : `${validationErrors.length} Errors:`}
+                            </Typography>
+                            <Paper variant="outlined" sx={{ bgcolor: '#fff8f8', borderColor: '#ffcdd2', p: 2, maxHeight: 180, overflowY: 'auto' }}>
+                                <List dense>
+                                    {validationErrors.map((err, idx) => (
+                                        <ListItem key={idx} disablePadding>
+                                            <ListItemIcon sx={{ minWidth: 32 }}>
+                                                <CancelIcon color="error" fontSize="small" />
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={<Typography variant="body2" color="error">{err}</Typography>}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Paper>
                         </Box>
-                    ) : validationErrors.length > 0 ? (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {validationErrors.map((err, idx) => <div key={idx}>{err}</div>)}
-                        </Alert>
-                    ) : validationPassed ? (
-                        <Alert severity="success" sx={{ mb: 2 }}>Configuration is valid!</Alert>
-                    ) : null}
-                    <List>
-                        {machineList.map((machine, idx) => (
-                            <React.Fragment key={machine.id}>
-                                <ListItem secondaryAction={
-                                    <IconButton edge="end" aria-label="info" onClick={() => setExpandedInfoIdx(expandedInfoIdx === idx ? null : idx)}>
-                                        <InfoOutlinedIcon />
-                                    </IconButton>
-                                }>
-                                    <ListItemIcon>
-                                        {machine.status === 'loading' ? (
-                                            <CircularProgress size={24} />
-                                        ) : machine.status === 'success' ? (
-                                            <CheckCircleIcon color="success" />
-                                        ) : machine.status === 'error' ? (
-                                            <CancelIcon color="error" />
-                                        ) : (
-                                            <RadioButtonUncheckedIcon color="disabled" />
-                                        )}
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={machine.name}
-                                        secondary={(() => {
-                                            const roles = machine.roles && machine.roles.length > 0 ? `Roles: ${machine.roles.join(', ')}` : '';
-                                            const vlans = machine.vlans && machine.vlans.length > 0 ? `VLANs: ${machine.vlans.join(', ')}` : '';
-                                            let os = '';
-                                            if (machine.baseType === 'vmPack') {
-                                                os = machine.group?.os_version ? `OS: ${machine.group.os_version}` : '';
-                                            } else {
-                                                os = machine.advanced?.os_version ? `OS: ${machine.advanced.os_version}` : '';
+                    )}
+
+                    {/* Machines List Section */}
+                    <Box sx={{ px: 3, pt: 1, pb: 2 }}>
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                            Machines to Deploy ({machineList.length})
+                        </Typography>
+                        <Paper variant="outlined" sx={{ maxHeight: 220, overflowY: 'auto', borderColor: '#e0e0e0', p: 0 }}>
+                            <List dense>
+                                {machineList.map((machine, idx) => (
+                                    <React.Fragment key={machine.id}>
+                                        <ListItem
+                                            secondaryAction={
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label={`Show info for ${machine.name}`}
+                                                    onClick={() => setExpandedInfoIdx(expandedInfoIdx === idx ? null : idx)}
+                                                    size="large"
+                                                >
+                                                    <InfoOutlinedIcon />
+                                                </IconButton>
                                             }
-                                            return [roles, vlans, os].filter(Boolean).join(' | ');
-                                        })()}
-                                    />
-                                </ListItem>
-                                {expandedInfoIdx === idx && (
-                                    <Box sx={{ ml: 7, mb: 1, p: 1, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: 14 }}>
-                                        {machine.status === 'loading' && 'Creating machine...'}
-                                        {machine.status === 'success' && machine.info}
-                                        {machine.status === 'error' && machine.info}
-                                    </Box>
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </List>
+                                            sx={{ borderBottom: idx < machineList.length - 1 ? '1px solid #f0f0f0' : 'none', alignItems: 'flex-start' }}
+                                        >
+                                            <ListItemIcon sx={{ minWidth: 36, mt: 0.5 }}>
+                                                {machine.status === 'loading' ? (
+                                                    <CircularProgress size={20} thickness={4} />
+                                                ) : machine.status === 'success' ? (
+                                                    <CheckCircleIcon color="success" />
+                                                ) : machine.status === 'error' ? (
+                                                    <CancelIcon color="error" />
+                                                ) : (
+                                                    <RadioButtonUncheckedIcon color="disabled" />
+                                                )}
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={<Typography variant="subtitle2">{machine.name}</Typography>}
+                                                secondary={
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                        {(() => {
+                                                            const roles = machine.roles && machine.roles.length > 0 ? `Roles: ${machine.roles.join(', ')}` : '';
+                                                            const vlanStrs = (machine.vlans && machine.vlans.length > 0)
+                                                                ? machine.vlans.map(vlanId => {
+                                                                    const vlanObj = vlans.find(v => v.id === vlanId);
+                                                                    return vlanObj ? `${vlanObj.name} (${vlanObj.id})` : vlanId;
+                                                                })
+                                                                : [];
+                                                            const vlansText = vlanStrs.length > 0 ? `VLAN${vlanStrs.length > 1 ? 's' : ''}: ${vlanStrs.join(', ')}` : '';
+                                                            let os = '';
+                                                            if (machine.baseType === 'vmPack') {
+                                                                os = machine.group?.os_version ? `OS: ${machine.group.os_version}` : '';
+                                                            } else {
+                                                                os = machine.advanced?.os_version ? `OS: ${machine.advanced.os_version}` : '';
+                                                            }
+                                                            return [roles, vlansText, os].filter(Boolean).join(' | ');
+                                                        })()}
+                                                    </Typography>
+                                                }
+                                            />
+                                        </ListItem>
+                                        {expandedInfoIdx === idx && (
+                                            <Box sx={{ ml: 7, mb: 1, p: 1, bgcolor: '#f5f5f5', borderRadius: 2, fontSize: 14 }}>
+                                                {machine.status === 'loading' && 'Creating machine...'}
+                                                {machine.status === 'success' && machine.info}
+                                                {machine.status === 'error' && machine.info}
+                                            </Box>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </List>
+                        </Paper>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDeployModal} disabled={deploying}>Close</Button>
-                    <Button variant="contained" color="success" disabled={!validationPassed || deploying} onClick={handleDeploy}>
-                        {deploying ? 'Deploying...' : 'Deploy'}
+                <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #e0e0e0', gap: 1 }}>
+                    <Button onClick={handleCloseDeployModal} disabled={deploying} aria-label="Close validation and deploy modal">Close</Button>
+                    <Button
+                        variant="contained"
+                        color="success"
+                        disabled={!validationPassed || deploying}
+                        onClick={handleDeploy}
+                        aria-label="Deploy machines"
+                        sx={{ minWidth: 120 }}
+                    >
+                        {deploying ? (
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <CircularProgress size={16} color="inherit" />
+                                Deploying...
+                            </Box>
+                        ) : 'Deploy'}
                     </Button>
                 </DialogActions>
             </Dialog>
