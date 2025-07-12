@@ -44,6 +44,12 @@ const Menuitems = [
     external: true,
   },
   {
+    id: uniqueId(),
+    title: 'Store',
+    icon: IconChecks,
+    href: '/apps',
+  },
+  {
     navlabel: true,
     subheader: 'Auth',
   },
