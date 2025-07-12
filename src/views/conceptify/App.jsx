@@ -268,7 +268,7 @@ export default function App() {
             return acc;
         }, {});
 
-        console.log('Generated Config:', JSON.stringify(configs, null, 2));
+
     };
 
     const handleAdvancedChange = (itemId, advanced) => {
@@ -448,86 +448,91 @@ export default function App() {
     };
 
     // Real deploy for each machine
-    const deployMachine = async (machine, idx) => {
-        // Map machine to backend payload
-        let payload = {};
-        let caseType = '';
-        const baseType = machine.id.split('-')[0];
-        if (baseType === 'linuxServer' || baseType === 'windowsServer' || baseType === 'windows10') {
-            caseType = 'Deploy-1';
-            payload = {
-                case: caseType,
-                clone: baseType === 'linuxServer'
-                    ? machine.advanced?.os_version // Use selected ISO/template filename
-                    : (baseType === 'windowsServer' ? 'win2019-template' : 'win10-template'),
-                vm_name: machine.name,
-                vm_id: 100 + idx, // Example VMID, adjust as needed
-                ip: machine.advanced?.ip_address || '',
-                gw: '192.168.1.1',
-                network_bridge: 'vmbr0',
-                network_tag: 10,
-                // Add more fields as needed
-            };
-        } else if (baseType === 'vmPack') {
-            caseType = 'Deploy-any-count';
-            payload = {
-                case: caseType,
-                clone: machine.group?.os_version, // Use selected ISO/template filename
-                base_name: machine.name,
-                vm_count: machine.group?.count || 1,
-                start_vmid: 200 + idx * 10,
-                start_ip: '192.168.1.100',
-                gw: '192.168.1.1',
-                network_bridge: 'vmbr0',
-                network_tag: 10,
-                // Add more fields as needed
-            };
-        }
+    const handleDeploy = async () => {
+        setDeploying(true);
+
         try {
-            const token = Cookies.cookies.get('token');
+            const token = Cookies.get('token');
             const headers = {
                 'Content-Type': 'application/json',
             };
             if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/run-terraform`, {
+
+            // Send all machines to the new deployment endpoint
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/deploy-machines`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ machines: machineList }),
             });
+
             const data = await response.json();
-            if (response.ok && !data.error) {
-                return {
-                    ...machine,
-                    status: 'success',
-                    info: data.output || 'Machine created successfully.'
-                };
+
+            if (response.ok) {
+                // Update machine list with deployment results
+                const updatedMachines = machineList.map(machine => {
+                    const result = data.results.find(r => r.machine_id === machine.id);
+                    if (result) {
+                        return {
+                            ...machine,
+                            status: result.status,
+                            info: result.message + (result.output ? `\n\nOutput:\n${result.output}` : '')
+                        };
+                    }
+                    return {
+                        ...machine,
+                        status: 'error',
+                        info: 'No deployment result received'
+                    };
+                });
+
+                setMachineList(updatedMachines);
+
+                // Show summary message
+                if (data.failed > 0) {
+                    enqueueSnackbar(`Deployment completed: ${data.successful} successful, ${data.failed} failed`, {
+                        variant: 'warning',
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                        autoHideDuration: 5000,
+                    });
+                } else {
+                    enqueueSnackbar(`All ${data.successful} machines deployed successfully!`, {
+                        variant: 'success',
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                        autoHideDuration: 5000,
+                    });
+                }
             } else {
-                return {
+                // Handle error response
+                enqueueSnackbar(`Deployment failed: ${data.error || 'Unknown error'}`, {
+                    variant: 'error',
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    autoHideDuration: 5000,
+                });
+
+                // Mark all machines as error
+                const errorMachines = machineList.map(machine => ({
                     ...machine,
                     status: 'error',
-                    info: data.error || 'Error: Terraform failed.'
-                };
+                    info: data.error || 'Deployment failed'
+                }));
+                setMachineList(errorMachines);
             }
         } catch (err) {
-            return {
+            enqueueSnackbar(`Network error during deployment: ${err.message}`, {
+                variant: 'error',
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                autoHideDuration: 5000,
+            });
+
+            // Mark all machines as error
+            const errorMachines = machineList.map(machine => ({
                 ...machine,
                 status: 'error',
-                info: err.message || 'Network error.'
-            };
+                info: `Network error: ${err.message}`
+            }));
+            setMachineList(errorMachines);
         }
-    };
 
-    const handleDeploy = async () => {
-        setDeploying(true);
-        let newList = [...machineList];
-        for (let i = 0; i < newList.length; i++) {
-            newList[i].status = 'loading';
-            setMachineList([...newList]);
-            // TODO: Replace with real API call
-            const result = await deployMachine(newList[i], i);
-            newList[i] = result;
-            setMachineList([...newList]);
-        }
         setDeploying(false);
     };
 

@@ -44,7 +44,7 @@ const TaskList = () => {
             });
 
             if (response.ok) {
-                console.log('Tasks updated successfully');
+
             } else {
                 console.error('Failed to update tasks:', response.statusText);
             }
