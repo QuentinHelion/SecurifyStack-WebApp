@@ -24,6 +24,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
+import { VM_OS_OPTIONS, CT_OS_OPTIONS } from '../App';
 
 const Transition = forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -45,19 +46,18 @@ export default function WhiteboardItem({
   onAdvancedChange,
   onContextMenu,
   gridSize = 50,
+  isEditable = true,
 }) {
-  // Drag state
+  // All hooks must be declared before any return!
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'whiteboardItem',
     item: { ...item },
     collect: m => ({ isDragging: !!m.isDragging() }),
-  }));
+    canDrag: isEditable,
+  }), [isEditable, item]);
 
-  // Popover for Roles/VLANs
   const [anchorEl, setAnchorEl] = useState(null);
   const openPopover = Boolean(anchorEl);
-
-  // Advanced dialog
   const [advOpen, setAdvOpen] = useState(false);
 
   // Pull advanced settings or defaults
@@ -66,49 +66,34 @@ export default function WhiteboardItem({
   const monitoring = adv.monitoring ?? true;
   const username = adv.username || '';
   const sshKey = adv.sshKey || '';
-  const ipMode = adv.ipMode || 'dhcp';
-  const ipAddress = adv.ipAddress || '';
-  const subnetMask = adv.subnetMask || '24';
+  const ip_mode = adv.ip_mode || 'dhcp';
+  const ip_address = adv.ip_address || '';
+  const subnet_mask = adv.subnet_mask || '24';
 
-  // Local-IP + validation
-  const [localIp, setLocalIp] = useState(ipAddress);
+  const [localIp, setLocalIp] = useState(ip_address);
   const [ipError, setIpError] = useState('');
 
-  useEffect(() => {
-    setLocalIp(ipAddress);
-    setIpError('');
-  }, [ipAddress, ipMode]);
+  const linuxOsOptions = adv.type === 'vm' ? VM_OS_OPTIONS : adv.type === 'ct' ? CT_OS_OPTIONS : [];
+  const vmPackOsOptions = item.group?.type === 'vm' ? VM_OS_OPTIONS : item.group?.type === 'ct' ? CT_OS_OPTIONS : [];
 
-  // ─── Handlers ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    setLocalIp(ip_address);
+    setIpError('');
+  }, [ip_address, ip_mode]);
+
+  // Handlers (unchanged)
   const handleClick = e => setAnchorEl(e.currentTarget);
   const handlePopoverClose = () => setAnchorEl(null);
   const handleAdvOpen = () => { setAnchorEl(null); setAdvOpen(true); };
   const handleAdvClose = () => setAdvOpen(false);
-
-  const handlePerfSelect = value =>
-    onAdvancedChange(item.id, { ...adv, perf: value });
-
-  const handleMonitorToggle = e =>
-    onAdvancedChange(item.id, { ...adv, monitoring: e.target.checked });
-
-  const handleUsernameChange = e =>
-    onAdvancedChange(item.id, { ...adv, username: e.target.value });
-
-  const handleSshKeyChange = e =>
-    onAdvancedChange(item.id, { ...adv, sshKey: e.target.value });
-
-  const handleIpModeChange = e =>
-    onAdvancedChange(item.id, {
-      ...adv,
-      ipMode: e.target.value,
-      ipAddress: '',
-      subnetMask: adv.subnetMask || '24',
-    });
-
+  const handlePerfSelect = value => onAdvancedChange(item.id, { ...adv, perf: value });
+  const handleMonitorToggle = e => onAdvancedChange(item.id, { ...adv, monitoring: e.target.checked });
+  const handleUsernameChange = e => onAdvancedChange(item.id, { ...adv, username: e.target.value });
+  const handleSshKeyChange = e => onAdvancedChange(item.id, { ...adv, sshKey: e.target.value });
+  const handleIpModeChange = e => onAdvancedChange(item.id, { ...adv, ip_mode: e.target.value, ip_address: '', subnet_mask: adv.subnet_mask || '24' });
   const handleIpAddressChange = e => {
     const val = e.target.value;
     setLocalIp(val);
-
     const ipv4 = /^(25[0-5]|2[0-4]\d|[01]?\d?\d)(\.(25[0-5]|2[0-4]\d|[01]?\d?\d)){3}$/;
     if (!val) {
       setIpError('IP address is required');
@@ -116,14 +101,51 @@ export default function WhiteboardItem({
       setIpError('Invalid IPv4 address');
     } else {
       setIpError('');
-      onAdvancedChange(item.id, { ...adv, ipMode: 'static', ipAddress: val });
+      onAdvancedChange(item.id, { ...adv, ip_mode: 'static', ip_address: val });
     }
   };
+  const handleMaskChange = e => onAdvancedChange(item.id, { ...adv, subnet_mask: e.target.value });
 
-  const handleMaskChange = e =>
-    onAdvancedChange(item.id, { ...adv, subnetMask: e.target.value });
-
-  // ────────────────────────────────────────────────────────────────────────────
+  // View-only: just show the icon and status
+  if (!isEditable) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          position: 'absolute',
+          left: item.left,
+          top: item.top,
+          width: gridSize,
+          height: gridSize,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 2,
+          borderColor: 'primary.main',
+          zIndex: 10,
+        }}
+      >
+        <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
+          {item.icon}
+          <span
+            title="Status: Unknown"
+            style={{
+              position: 'absolute',
+              top: 2,
+              right: -2,
+              width: 14,
+              height: 14,
+              background: '#bdbdbd', // default gray
+              borderRadius: '50%',
+              border: '2px solid white',
+              display: 'inline-block',
+              zIndex: 1,
+            }}
+          />
+        </Typography>
+      </Paper>
+    );
+  }
 
   const size = gridSize;
   const baseType = item.id.split('-')[0];
@@ -151,7 +173,24 @@ export default function WhiteboardItem({
           zIndex: 10,
         }}
       >
-        <Typography variant="h4">{item.icon}</Typography>
+        <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
+          {item.icon}
+          <span
+            title="Status: Unknown"
+            style={{
+              position: 'absolute',
+              top: 2,
+              right: -2,
+              width: 14,
+              height: 14,
+              background: '#bdbdbd', // default gray
+              borderRadius: '50%',
+              border: '2px solid white',
+              display: 'inline-block',
+              zIndex: 1,
+            }}
+          />
+        </Typography>
       </Paper>
 
       {/* Roles & VLAN Popover */}
@@ -175,7 +214,6 @@ export default function WhiteboardItem({
               <Typography variant="subtitle1" gutterBottom>
                 Pack de VMs
               </Typography>
-
               {/* Nombre de VMs */}
               <TextField
                 label="Nombre"
@@ -193,25 +231,30 @@ export default function WhiteboardItem({
                   });
                 }}
               />
-
-              {/* Sélection OS */}
-              <FormControl fullWidth size="small" margin="dense">
-                <InputLabel>OS</InputLabel>
-                <Select
-                  value={item.group?.templateType || ''}
-                  label="OS"
-                  onChange={e =>
-                    onGroupChange(item.id, {
-                      ...item.group,
-                      templateType: e.target.value
-                    })
-                  }
-                >
-                  <MenuItem value="debian">Debian</MenuItem>
-                  <MenuItem value="ubuntu">Ubuntu</MenuItem>
-                  <MenuItem value="centos">CentOS</MenuItem>
-                </Select>
-              </FormControl>
+              <Typography variant="subtitle1" sx={{ mt: 1 }}>Type</Typography>
+              <RadioGroup row value={item.group?.type || 'vm'} onChange={e => onGroupChange(item.id, { ...item.group, type: e.target.value })}>
+                <FormControlLabel value="vm" control={<Radio />} label="VM" />
+                <FormControlLabel value="ct" control={<Radio />} label="CT" />
+              </RadioGroup>
+              {item.group?.type && (
+                <FormControl fullWidth size="small" margin="dense">
+                  <InputLabel>OS</InputLabel>
+                  <Select
+                    value={item.group?.os_version || ''}
+                    label="OS"
+                    onChange={e =>
+                      onGroupChange(item.id, {
+                        ...item.group,
+                        os_version: e.target.value
+                      })
+                    }
+                  >
+                    {vmPackOsOptions.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
 
               {/* VLANs partagés */}
               <FormControl fullWidth size="small" margin="dense">
@@ -239,16 +282,15 @@ export default function WhiteboardItem({
                 <FormControl fullWidth size="small" margin="dense">
                   <InputLabel>OS Version</InputLabel>
                   <Select
-                    value={item.advanced?.osVersion || ''}
+                    value={item.advanced?.os_version || ''}
                     label="OS Version"
                     onChange={e =>
                       onAdvancedChange(item.id, {
                         ...item.advanced,
-                        osVersion: e.target.value
+                        os_version: e.target.value
                       })
                     }
                   >
-                    <MenuItem value="2016">Windows Server 2016</MenuItem>
                     <MenuItem value="2019">Windows Server 2019</MenuItem>
                     <MenuItem value="2022">Windows Server 2022</MenuItem>
                   </Select>
@@ -257,24 +299,27 @@ export default function WhiteboardItem({
 
               {/* ─── Linux Server OS Version ──────────────────────────────── */}
               {baseType === 'linuxServer' && (
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>OS Version</InputLabel>
-                  <Select
-                    value={item.advanced?.osVersion || ''}
-                    label="OS Version"
-                    onChange={e =>
-                      onAdvancedChange(item.id, {
-                        ...item.advanced,
-                        osVersion: e.target.value
-                      })
-                    }
-                  >
-                    <MenuItem value="ubuntu20.04">Ubuntu 20.04</MenuItem>
-                    <MenuItem value="ubuntu22.04">Ubuntu 22.04</MenuItem>
-                    <MenuItem value="debian11">Debian 11</MenuItem>
-                    <MenuItem value="debian12">Debian 12</MenuItem>
-                  </Select>
-                </FormControl>
+                <>
+                  <Typography variant="subtitle1" sx={{ mt: 1 }}>Type</Typography>
+                  <RadioGroup row value={adv.type || ''} onChange={e => onAdvancedChange(item.id, { ...adv, type: e.target.value })}>
+                    <FormControlLabel value="vm" control={<Radio />} label="VM" />
+                    <FormControlLabel value="ct" control={<Radio />} label="CT" />
+                  </RadioGroup>
+                  {adv.type && (
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>OS Version</InputLabel>
+                      <Select
+                        value={adv.os_version || ''}
+                        label="OS Version"
+                        onChange={e => onAdvancedChange(item.id, { ...adv, os_version: e.target.value })}
+                      >
+                        {linuxOsOptions.map(opt => (
+                          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                </>
               )}
 
               {/* 2) Roles (ne pas afficher "Roles" pour Win 10/11) */}
@@ -409,12 +454,12 @@ export default function WhiteboardItem({
 
           {/* IP Configuration */}
           <Typography variant="subtitle1" sx={{ mt: 2 }}>IP Configuration</Typography>
-          <RadioGroup row value={ipMode} onChange={handleIpModeChange} sx={{ mb: 1 }}>
+          <RadioGroup row value={ip_mode} onChange={handleIpModeChange} sx={{ mb: 1 }}>
             <FormControlLabel value="dhcp" control={<Radio />} label="DHCP" />
             <FormControlLabel value="static" control={<Radio />} label="Static" />
           </RadioGroup>
 
-          {ipMode === 'static' && (
+          {ip_mode === 'static' && (
             <>
               <Box display="flex" alignItems="center" gap={1} mb={ipError ? 0 : 2}>
                 <TextField
@@ -425,12 +470,13 @@ export default function WhiteboardItem({
                   value={localIp}
                   onChange={handleIpAddressChange}
                   error={!!ipError}
-                  sx={{ flex: 2 }}
+                  helperText={ipError}
+                  fullWidth
                 />
                 <Typography>/</Typography>
                 <FormControl size="small" margin="dense" sx={{ flex: 1 }}>
                   <InputLabel>Mask</InputLabel>
-                  <Select value={subnetMask} label="Mask" onChange={handleMaskChange}>
+                  <Select value={subnet_mask} label="Mask" onChange={handleMaskChange}>
                     {Array.from({ length: 33 }, (_, i) => String(i)).map(m => (
                       <MenuItem key={m} value={m}>{m}</MenuItem>
                     ))}

@@ -15,6 +15,7 @@ const Checklist = Loadable(lazy(() => import('../views/checklist/Checklist')));
 const DeployPage = Loadable(lazy(() => import('../views/form/DeployPage')));
 const ConceptifyApp = Loadable(lazy(() => import('../views/conceptify/App')));
 const ControlPanel = Loadable(lazy(() => import('../views/control-panel/ControlPanel')));
+const Store = Loadable(lazy(() => import('../views/store/Store')));
 
 const Router = [
   {
@@ -30,6 +31,7 @@ const Router = [
       { path: '/dashboard', exact: true, element: <Dashboard /> },
       { path: '/form', exact: true, element: <DeployPage /> },
       { path: '/control-panel', exact: true, element: <ControlPanel /> },
+      { path: '/apps', exact: true, element: <Store /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },

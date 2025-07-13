@@ -157,11 +157,11 @@ const DeployPage = () => {
                 break;
         }
 
-        console.log('Form Data as JSON:', dataToSend);
+
 
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_ADDR}/run-terraform?token=${token}`, dataToSend);
-            console.log('Server response:', response.data);
+
             enqueueSnackbar('VM creation successful!', { variant: 'success', anchorOrigin: { vertical: 'top', horizontal: 'right' } });
         } catch (error) {
             console.error('Error sending data to the server:', error);
