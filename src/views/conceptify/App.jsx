@@ -92,33 +92,133 @@ export default function App() {
     const [machineList, setMachineList] = useState([]);
     const [deploying, setDeploying] = useState(false);
     const [expandedInfoIdx, setExpandedInfoIdx] = useState(null);
+    const [deploymentMachines, setDeploymentMachines] = useState([]);
+    const [hasDeployedMachines, setHasDeployedMachines] = useState(false);
+    const [bootButtonLoading, setBootButtonLoading] = useState(false);
     // ---
 
-    // load saved state (10-min TTL)
+    // load saved state (10-min TTL) and deployed machines
     useEffect(() => {
-        const raw = localStorage.getItem('conceptify-state');
-        if (!raw) return;
-        const { timestamp, whiteboardItems: savedItems, vlans: savedVlans } = JSON.parse(raw);
-        if (Date.now() - timestamp > 10 * 60 * 1000) {
-            localStorage.removeItem('conceptify-state');
-            return;
-        }
-        setWhiteboardItems(savedItems);
-        setVlans(savedVlans);
+        const loadInitialData = async () => {
+            // Load saved state from localStorage
+            const raw = localStorage.getItem('conceptify-state');
+            let savedItems = [];
+            let savedVlans = initialVlans;
 
-        // rebuild occupiedCells
-        const occ = {};
-        savedItems.forEach(i => { occ[`${i.left},${i.top}`] = i.id });
-        setOccupiedCells(occ);
+            if (raw) {
+                const { timestamp, whiteboardItems: localItems, vlans: localVlans } = JSON.parse(raw);
+                if (Date.now() - timestamp <= 10 * 60 * 1000) {
+                    savedItems = localItems;
+                    savedVlans = localVlans;
+                }
+            }
 
-        // rebuild itemCounters
-        const cnts = {};
-        savedItems.forEach(({ id }) => {
-            const [base, num] = id.split('-');
-            const n = parseInt(num, 10);
-            if (!isNaN(n)) cnts[base] = Math.max(cnts[base] || 0, n);
-        });
-        itemCounters.current = cnts;
+            // Load deployed machines from backend
+            try {
+                const token = Cookies.get('token');
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/deployed-machines`, {
+                    method: 'GET',
+                    headers,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const deployedMachines = data.machines || [];
+
+                    // Convert deployed machines to whiteboard items
+                    const deployedItems = deployedMachines.map((machine, index) => {
+                        // Get icon from legend items
+                        const legendItem = legendItems.find(item => item.id === machine.base_type);
+                        const icon = legendItem ? legendItem.icon : '❓';
+
+                        return {
+                            id: machine.id,
+                            name: machine.name,
+                            baseType: machine.base_type,
+                            icon: icon,
+                            left: 100 + (index % 5) * 150, // Arrange deployed machines in a grid
+                            top: 100 + Math.floor(index / 5) * 150,
+                            roles: [], // Initialize roles as empty array
+                            vlans: [], // Initialize vlans as empty array
+                            advanced: machine.config?.advanced || {},
+                            isDeployed: true,
+                            deploymentInfo: {
+                                ip_address: machine.ip_address,
+                                status: machine.status,
+                                deployment_time: machine.deployment_time
+                            }
+                        };
+                    });
+
+                    // Merge saved items with deployed items, giving priority to saved items
+                    const allItems = [...savedItems];
+                    deployedItems.forEach(deployedItem => {
+                        // Only add if not already in saved items
+                        if (!allItems.find(item => item.id === deployedItem.id)) {
+                            allItems.push(deployedItem);
+                        }
+                    });
+
+                    setWhiteboardItems(allItems);
+                    setVlans(savedVlans);
+
+                    // rebuild occupiedCells
+                    const occ = {};
+                    allItems.forEach(i => { occ[`${i.left},${i.top}`] = i.id });
+                    setOccupiedCells(occ);
+
+                    // rebuild itemCounters
+                    const cnts = {};
+                    allItems.forEach(({ id }) => {
+                        const [base, num] = id.split('-');
+                        const n = parseInt(num, 10);
+                        if (!isNaN(n)) cnts[base] = Math.max(cnts[base] || 0, n);
+                    });
+                    itemCounters.current = cnts;
+                } else {
+                    // If deployed machines fetch fails, just use saved state
+                    setWhiteboardItems(savedItems);
+                    setVlans(savedVlans);
+
+                    const occ = {};
+                    savedItems.forEach(i => { occ[`${i.left},${i.top}`] = i.id });
+                    setOccupiedCells(occ);
+
+                    const cnts = {};
+                    savedItems.forEach(({ id }) => {
+                        const [base, num] = id.split('-');
+                        const n = parseInt(num, 10);
+                        if (!isNaN(n)) cnts[base] = Math.max(cnts[base] || 0, n);
+                    });
+                    itemCounters.current = cnts;
+                }
+            } catch (error) {
+                console.error('Error loading deployed machines:', error);
+                // Fallback to saved state only
+                setWhiteboardItems(savedItems);
+                setVlans(savedVlans);
+
+                const occ = {};
+                savedItems.forEach(i => { occ[`${i.left},${i.top}`] = i.id });
+                setOccupiedCells(occ);
+
+                const cnts = {};
+                savedItems.forEach(({ id }) => {
+                    const [base, num] = id.split('-');
+                    const n = parseInt(num, 10);
+                    if (!isNaN(n)) cnts[base] = Math.max(cnts[base] || 0, n);
+                });
+                itemCounters.current = cnts;
+            }
+
+            // Check for deployed machines to enable/disable boot button
+            await checkDeployedMachines();
+        };
+
+        loadInitialData();
     }, []);
 
     // helpers
@@ -472,10 +572,17 @@ export default function App() {
                 const updatedMachines = machineList.map(machine => {
                     const result = data.results.find(r => r.machine_id === machine.id);
                     if (result) {
+                        // Show clean message with IP address if available
+                        let cleanMessage = result.message;
+                        if (result.ip_address) {
+                            cleanMessage = `✅ ${machine.name} deployed successfully!\n🌐 IP Address: ${result.ip_address}\n🔗 SSH: ssh debian@${result.ip_address}`;
+                        }
+
                         return {
                             ...machine,
                             status: result.status,
-                            info: result.message + (result.output ? `\n\nOutput:\n${result.output}` : '')
+                            info: cleanMessage,
+                            ip_address: result.ip_address
                         };
                     }
                     return {
@@ -534,6 +641,73 @@ export default function App() {
         }
 
         setDeploying(false);
+    };
+
+    const handleBootAllMachines = async () => {
+        if (!hasDeployedMachines) {
+            console.log('Boot button clicked but no deployed machines found');
+            enqueueSnackbar('No deployed machines found to boot', { variant: 'warning' });
+            return;
+        }
+
+        setBootButtonLoading(true);
+        console.log('Starting boot all machines operation...');
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/boot-all-machines`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${Cookies.get('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Boot operation completed:', data);
+
+            // Show success message
+            enqueueSnackbar(data.message, {
+                variant: data.success_count > 0 ? 'success' : 'warning',
+                autoHideDuration: 6000
+            });
+
+            // Refresh deployed machines status after boot
+            await checkDeployedMachines();
+
+            return data;
+        } catch (error) {
+            console.error('Error booting machines:', error);
+            enqueueSnackbar(`Error booting machines: ${error.message}`, { variant: 'error' });
+            throw error;
+        } finally {
+            setBootButtonLoading(false);
+        }
+    };
+
+    const checkDeployedMachines = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDR}/check-deployed-machines`, {
+                headers: {
+                    'Authorization': `Bearer ${Cookies.get('token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setHasDeployedMachines(data.has_machines);
+                console.log(`Deployed machines check: ${data.has_machines ? 'Found' : 'No'} machines (${data.machine_count} total)`);
+            } else {
+                console.error('Failed to check deployed machines');
+                setHasDeployedMachines(false);
+            }
+        } catch (error) {
+            console.error('Error checking deployed machines:', error);
+            setHasDeployedMachines(false);
+        }
     };
 
     // Add useEffect to trigger validation when modal opens
@@ -641,9 +815,9 @@ export default function App() {
                                         ws.map(i =>
                                             i.id === id
                                                 ? {
-                                                    ...i, roles: i.roles.includes(r)
-                                                        ? i.roles.filter(x => x !== r)
-                                                        : [...i.roles, r]
+                                                    ...i, roles: (i.roles || []).includes(r)
+                                                        ? (i.roles || []).filter(x => x !== r)
+                                                        : [...(i.roles || []), r]
                                                 }
                                                 : i
                                         )
@@ -664,12 +838,42 @@ export default function App() {
                             />
                         </Box>
                     </Box>
-                    {isEditable && (
+                    {isEditable ? (
                         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ minHeight: 'auto', height: 'auto', py: 1, px: 3 }}>
                             <Button variant="contained" color="primary" onClick={saveWork} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Save Work</Button>
-                            <Button variant="contained" color="secondary" onClick={generateConfigFiles} sx={{ minWidth: 180, fontSize: 14, py: 1 }}>Generate Config Files</Button>
                             <Button variant="contained" color="info" onClick={handleOpenDeployModal} sx={{ minWidth: 180, fontSize: 14, py: 1 }}>Validate & Deploy</Button>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={handleBootAllMachines}
+                                disabled={!hasDeployedMachines || bootButtonLoading}
+                                sx={{
+                                    minWidth: 160,
+                                    fontSize: 14,
+                                    py: 1,
+                                    opacity: !hasDeployedMachines ? 0.5 : 1
+                                }}
+                            >
+                                {bootButtonLoading ? 'Booting...' : 'Boot All Machines'}
+                            </Button>
                             <Button variant="outlined" color="error" onClick={handleClearCache} sx={{ minWidth: 120, fontSize: 14, py: 1 }}>Clear Cache</Button>
+                        </Box>
+                    ) : (
+                        <Box display="flex" justifyContent="center" alignItems="center" sx={{ minHeight: 'auto', height: 'auto', py: 1, px: 3 }}>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={handleBootAllMachines}
+                                disabled={!hasDeployedMachines || bootButtonLoading}
+                                sx={{
+                                    minWidth: 160,
+                                    fontSize: 14,
+                                    py: 1,
+                                    opacity: !hasDeployedMachines ? 0.5 : 1
+                                }}
+                            >
+                                {bootButtonLoading ? 'Booting...' : 'Boot All Machines'}
+                            </Button>
                         </Box>
                     )}
                 </Box>
