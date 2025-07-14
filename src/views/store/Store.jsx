@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import {Button} from "@mui/material";
 
 export default function AppStore() {
     const [apps, setApps] = useState([]);
@@ -39,12 +40,14 @@ export default function AppStore() {
                     marginBottom: 20,
                     borderRadius: 8
                 }}>
-                    <img src={`${import.meta.env.VITE_BACKEND_ADDR}/${app.logo_url}`} alt={app.name} style={{ width: 100, height: 100 }} />
                     <h2>{app.name}</h2>
                     <p>{app.description}</p>
-                    <button onClick={() => installApp(app.name)} disabled={installing === app.name}>
+                    {/*<button onClick={() => installApp(app.name)} disabled={installing === app.name}>*/}
+                    {/*    {installing === app.name ? "Installation…" : "Installer"}*/}
+                    {/*</button>*/}
+                    <Button variant="contained" color="primary" onClick={() => installApp(app.name)} disabled={installing === app.name}>
                         {installing === app.name ? "Installation…" : "Installer"}
-                    </button>
+                    </Button>
                 </div>
             ))}
             {message && <p style={{ marginTop: 20 }}>{message}</p>}
