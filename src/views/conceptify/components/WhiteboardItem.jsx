@@ -128,14 +128,14 @@ export default function WhiteboardItem({
         <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
           {item.icon}
           <span
-            title="Status: Unknown"
+            title={item.isDeployed ? `Status: ${item.deploymentInfo?.status || 'deployed'} - IP: ${item.deploymentInfo?.ip_address || 'unknown'}` : "Status: Unknown"}
             style={{
               position: 'absolute',
               top: 2,
               right: -2,
               width: 14,
               height: 14,
-              background: '#bdbdbd', // default gray
+              background: item.isDeployed ? '#4caf50' : '#bdbdbd', // green for deployed, gray for others
               borderRadius: '50%',
               border: '2px solid white',
               display: 'inline-block',
@@ -176,14 +176,14 @@ export default function WhiteboardItem({
         <Typography variant="h4" sx={{ position: 'relative', display: 'inline-block' }}>
           {item.icon}
           <span
-            title="Status: Unknown"
+            title={item.isDeployed ? `Status: ${item.deploymentInfo?.status || 'deployed'} - IP: ${item.deploymentInfo?.ip_address || 'unknown'}` : "Status: Unknown"}
             style={{
               position: 'absolute',
               top: 2,
               right: -2,
               width: 14,
               height: 14,
-              background: '#bdbdbd', // default gray
+              background: item.isDeployed ? '#4caf50' : '#bdbdbd', // green for deployed, gray for others
               borderRadius: '50%',
               border: '2px solid white',
               display: 'inline-block',
@@ -261,13 +261,13 @@ export default function WhiteboardItem({
                 <InputLabel>VLANs</InputLabel>
                 <Select
                   multiple
-                  value={item.vlans}
+                  value={item.vlans || []}
                   renderValue={vals => vals.join(', ')}
                   onChange={e => onVlanChange(item.id, e.target.value)}
                 >
                   {availableVlans.map(v => (
                     <MenuItem key={v.id} value={v.id}>
-                      <Checkbox checked={item.vlans.includes(v.id)} />
+                      <Checkbox checked={(item.vlans || []).includes(v.id)} />
                       <ListItemText primary={`${v.name} (${v.id})`} />
                     </MenuItem>
                   ))}
@@ -333,7 +333,7 @@ export default function WhiteboardItem({
                       key={r}
                       control={
                         <Checkbox
-                          checked={item.roles.includes(r)}
+                          checked={(item.roles || []).includes(r)}
                           onChange={() => onRoleToggle(item.id, r)}
                         />
                       }
