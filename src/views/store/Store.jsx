@@ -39,7 +39,7 @@ export default function AppStore() {
                     marginBottom: 20,
                     borderRadius: 8
                 }}>
-                    <img src={`http://192.170.10.10:5000${app.logo_url}`} alt={app.name} style={{ width: 100, height: 100 }} />
+                    <img src={`${import.meta.env.VITE_BACKEND_ADDR}/${app.logo_url}`} alt={app.name} style={{ width: 100, height: 100 }} />
                     <h2>{app.name}</h2>
                     <p>{app.description}</p>
                     <button onClick={() => installApp(app.name)} disabled={installing === app.name}>

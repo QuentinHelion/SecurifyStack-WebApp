@@ -6,7 +6,7 @@ const Sidebar = (props) => {
 
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up("lg"));
 
-  const sidebarWidth = '270px';
+  const sidebarWidth = '275px';
 
   if (lgUp) {
     return (
@@ -50,7 +50,7 @@ const Sidebar = (props) => {
               {/* ------------------------------------------- */}
               <SidebarItems />
             </Box>
-            
+
           </Box>
         </Drawer>
       </Box>
