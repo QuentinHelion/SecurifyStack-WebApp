@@ -38,5 +38,6 @@ export default defineConfig({
     server: {
         host: true,
         port: 3333,
+        allowedHosts: ['securify-stack.homelab'],
     },
 });
